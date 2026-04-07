@@ -1,0 +1,2778 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="PointageRH — Application de gestion du pointage des employés">
+<meta name="theme-color" content="#1a56e8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PointageRH">
+<title>PointageRH</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --primary:#1a56e8;--primary-light:#3b74f0;--primary-dark:#1240c0;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;--info:#06b6d4;
+  --bg:#f0f4ff;--surface:#fff;--surface2:#f8faff;--border:#e2e8f6;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --sb-bg:#0f172a;--sb-text:#e2e8f0;--sb-hover:rgba(26,86,232,0.15);
+  --shadow:0 4px 24px rgba(15,23,42,0.08);--shadow-lg:0 8px 40px rgba(15,23,42,0.14);
+  --r:12px;--rs:8px;--fh:'Syne',sans-serif;--fb:'DM Sans',sans-serif;
+  --sbw:240px;--sbc:68px;--tr:0.25s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="ocean"]  {--primary:#1a56e8;--primary-light:#3b74f0;--primary-dark:#1240c0;--sb-bg:#0f172a;--bg:#f0f4ff;}
+[data-theme="violet"] {--primary:#7c3aed;--primary-light:#8b5cf6;--primary-dark:#6d28d9;--sb-bg:#1e1033;--bg:#f5f3ff;}
+[data-theme="foret"]  {--primary:#059669;--primary-light:#10b981;--primary-dark:#047857;--sb-bg:#052e16;--bg:#f0fdf4;}
+[data-theme="rouge"]  {--primary:#dc2626;--primary-light:#ef4444;--primary-dark:#b91c1c;--sb-bg:#1c0a0a;--bg:#fff5f5;}
+[data-theme="ardoise"]{--primary:#475569;--primary-light:#64748b;--primary-dark:#334155;--sb-bg:#1e293b;--bg:#f1f5f9;}
+[data-theme="nuit"]   {--primary:#38bdf8;--primary-light:#7dd3fc;--primary-dark:#0ea5e9;--sb-bg:#020617;--bg:#0f172a;--surface:#1e293b;--surface2:#162032;--border:#334155;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:var(--fb);background:var(--bg);color:var(--text)}
+.app{display:flex;height:100vh;overflow:hidden}
+.sbo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:150;backdrop-filter:blur(2px)}
+.sbo.show{display:block}
+/* SIDEBAR */
+.sb{width:var(--sbw);background:var(--sb-bg);display:flex;flex-direction:column;transition:width var(--tr),transform var(--tr);overflow:hidden;flex-shrink:0;z-index:200;position:relative}
+.sb.col{width:var(--sbc)}
+@media(max-width:768px){.sb{position:fixed;top:0;left:0;height:100%;width:var(--sbw)!important;transform:translateX(-100%);box-shadow:4px 0 32px rgba(0,0,0,.3)}.sb.mob{transform:translateX(0)}.sbt{display:none!important}}
+.sbh{display:flex;align-items:center;gap:12px;padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.07);min-height:72px;overflow:hidden;flex-shrink:0}
+.sbl{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--fh);font-weight:800;color:#fff;font-size:16px}
+.sbb{color:#fff;font-family:var(--fh);font-weight:700;font-size:18px;white-space:nowrap;overflow:hidden}.sbb span{color:var(--primary-light)}
+.sbt{position:absolute;right:-12px;top:72px;width:24px;height:24px;border-radius:50%;background:var(--primary);border:2px solid var(--sb-bg);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:var(--tr);z-index:201}
+.sbt:hover{background:var(--primary-light)}
+.sbn{flex:1;padding:12px 8px;overflow-y:auto;overflow-x:hidden}
+.st{font-size:10px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,.3);padding:8px 8px 4px;text-transform:uppercase;white-space:nowrap;overflow:hidden;transition:var(--tr)}
+.sb.col .st{opacity:0}
+.ni{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer;transition:var(--tr);color:var(--sb-text);white-space:nowrap;overflow:hidden;margin-bottom:2px}
+.ni:hover{background:var(--sb-hover);color:#fff}.ni.active{background:var(--primary);color:#fff}
+.nic{width:20px;text-align:center;flex-shrink:0;font-size:15px}.nil{font-size:14px;font-weight:500;overflow:hidden}
+.sbf{padding:12px 8px;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.sbu{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:10px;overflow:hidden}
+.ua{width:32px;height:32px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
+.un{color:#fff;font-size:13px;font-weight:600;white-space:nowrap}.ur{color:rgba(255,255,255,.4);font-size:11px;white-space:nowrap}
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:12px;flex-shrink:0;box-shadow:0 1px 8px rgba(15,23,42,.04)}
+.tbl{display:flex;align-items:center;gap:12px}.ptitle{font-family:var(--fh);font-weight:700;font-size:18px}
+.tbr{display:flex;align-items:center;gap:8px}
+.tbb{height:36px;min-width:36px;padding:0 8px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:var(--tr);position:relative;flex-shrink:0;font-size:13px;font-weight:700;font-family:var(--fb)}
+.tbb:hover{background:var(--bg);color:var(--primary);border-color:var(--primary)}
+.ham{display:none}@media(max-width:768px){.ham{display:flex}}
+.nbadge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--danger);color:#fff;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px}
+.msel{display:flex;align-items:center;gap:6px}
+.msel select{padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text);cursor:pointer;font-family:var(--fb);outline:none}
+/* CARDS */
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow)}
+.ch{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ct{font-family:var(--fh);font-weight:700;font-size:15px}.cb{padding:18px}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:var(--tr);white-space:nowrap;font-family:var(--fb)}
+.bp{background:var(--primary);color:#fff}.bp:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.bo{background:transparent;color:var(--primary);border:1.5px solid var(--primary)}.bo:hover{background:var(--primary);color:#fff}
+.bd{background:var(--danger);color:#fff}.bd:hover{background:#dc2626}
+.bg2{background:transparent;color:var(--text2);border:1px solid var(--border)}.bg2:hover{background:var(--bg);color:var(--text)}
+.bsm{padding:5px 10px;font-size:12px}.bic{padding:7px}
+/* FORMS */
+.fg{margin-bottom:14px}.fl{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.fc{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:14px;background:var(--surface);color:var(--text);transition:var(--tr);font-family:var(--fb);outline:none}
+.fc:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,232,.1)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.fr{grid-template-columns:1fr}}
+/* STATS */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:14px;margin-bottom:20px}
+.sc{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:18px;display:flex;align-items:center;gap:14px;transition:var(--tr);box-shadow:var(--shadow)}
+.sc:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.sic{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sv{font-family:var(--fh);font-weight:800;font-size:26px;line-height:1}.sl{font-size:11px;color:var(--text2);margin-top:4px;font-weight:500}
+.pb{background:var(--border);border-radius:20px;height:6px;overflow:hidden;margin-top:6px}
+.pf{height:100%;border-radius:20px;transition:width .8s ease}
+/* TABLE */
+.tw{overflow:auto;max-height:calc(100vh - 270px)}.ti{min-width:1100px}
+table{width:100%;border-collapse:collapse}
+thead{position:sticky;top:0;z-index:10}
+thead th{background:var(--surface2);padding:9px 11px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--primary)}
+tbody tr{border-bottom:1px solid var(--border);transition:var(--tr)}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:9px 11px;font-size:13px;vertical-align:middle;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.tok{background:rgba(16,185,129,.12);color:#059669}.tko{background:rgba(239,68,68,.12);color:#dc2626}
+.twn{background:rgba(245,158,11,.12);color:#d97706}.tinf{background:rgba(6,182,212,.12);color:#0891b2}
+.tbl2{background:rgba(26,86,232,.12);color:var(--primary)}.tgr{background:rgba(100,116,139,.12);color:#475569}
+/* MODAL */
+.mov{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:var(--tr)}
+.mov.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:16px;width:100%;max-width:640px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(15,23,42,.25);transform:scale(.95) translateY(20px);transition:var(--tr)}
+.mov.open .modal{transform:scale(1) translateY(0)}.mlg{max-width:800px}
+.mh{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mt2{font-family:var(--fh);font-weight:700;font-size:17px}
+.mx{width:30px;height:30px;border-radius:8px;border:none;background:var(--bg);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--tr)}
+.mx:hover{background:var(--danger);color:#fff}
+.mb2{padding:22px;overflow-y:auto;flex:1}.mf{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.sbox{position:relative;flex:1;min-width:150px}
+.sbox input{width:100%;padding:7px 12px 7px 32px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text);outline:none;transition:var(--tr);font-family:var(--fb)}
+.sbox input:focus{border-color:var(--primary)}.sbox i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:12px}
+.tabb{display:flex;gap:4px;padding:0 18px;background:var(--surface);border-bottom:1px solid var(--border)}
+.tabbt{padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text2);border-bottom:2px solid transparent;transition:var(--tr);white-space:nowrap;font-family:var(--fb)}
+.tabbt:hover{color:var(--primary)}.tabbt.active{color:var(--primary);border-bottom-color:var(--primary)}
+/* DASHBOARD */
+.cgrid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:900px){.cgrid{grid-template-columns:1fr}}
+.ca{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:18px}
+.cat{font-family:var(--fh);font-weight:700;font-size:14px;margin-bottom:14px}
+.bc{display:flex;align-items:flex-end;gap:5px;height:110px}
+.bi{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.bar{width:100%;border-radius:5px 5px 0 0;transition:height .5s ease;min-height:4px}
+.bl{font-size:9px;color:var(--text3)}.bv{font-size:9px;font-weight:700;color:var(--text2)}
+.dw{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:8px;font-size:12px}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* Effectif bars */
+.svc-block{margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.svc-block-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.svc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.svc-name{font-weight:700;font-size:13px}
+.svc-total{font-family:var(--fh);font-weight:800;font-size:14px;padding:2px 10px;border-radius:20px}
+.svc-fct-list{padding:8px 14px;display:flex;flex-direction:column;gap:5px}
+.fct-row{display:flex;align-items:center;gap:10px}
+.fct-label{font-size:12px;color:var(--text2);min-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fct-bar-bg{flex:1;height:7px;background:var(--border);border-radius:20px;overflow:hidden}
+.fct-bar-fill{height:100%;border-radius:20px;transition:width .7s ease}
+.fct-val{font-size:12px;font-weight:700;min-width:20px;text-align:right}
+/* TOP5 */
+.t5t{width:100%;border-collapse:collapse}
+.t5t thead th{background:var(--surface2);padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border);white-space:nowrap}
+.t5t tbody tr{border-bottom:1px solid var(--border)}.t5t tbody tr:nth-child(even){background:var(--surface2)}
+.t5t tbody td{padding:8px 10px;font-size:12px;vertical-align:middle}
+.t5r{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.bpw{display:flex;align-items:center;gap:8px}.bpb{flex:1;height:8px;background:var(--border);border-radius:20px;overflow:hidden;min-width:50px}
+.bpf{height:100%;border-radius:20px;transition:width .8s ease}.bpv{font-size:11px;font-weight:700;min-width:22px;text-align:right}
+/* POINTAGE */
+.ptc{overflow:auto;max-height:calc(100vh - 210px)}.ptt{border-collapse:collapse}
+.ptt th,.ptt td{border:1px solid var(--border);padding:5px 7px;font-size:11px;white-space:nowrap;vertical-align:middle}
+.ptt thead th{background:var(--surface2);position:sticky;top:0;z-index:5;font-size:10px}
+.cf{position:sticky;left:0;z-index:6;background:var(--surface)}.ptt thead .cf{z-index:8}
+.ptcell{min-width:50px;text-align:center;cursor:pointer;border-radius:4px;padding:3px 6px;font-size:10px;font-weight:600;transition:var(--tr)}
+.ptcell:hover{opacity:.8;transform:scale(1.05)}.ptcell.locked{cursor:not-allowed;opacity:.7}
+.dh{display:flex;flex-direction:column;align-items:center;gap:1px}
+.dn{font-size:12px;font-weight:700}.dd{font-size:9px;font-weight:500;opacity:.7}
+.day-lock-btn{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;border:none;cursor:pointer;font-size:9px;margin-top:3px;transition:var(--tr)}
+.day-lock-btn.locked{background:rgba(239,68,68,.15);color:#dc2626}.day-lock-btn.unlocked{background:rgba(16,185,129,.15);color:#059669}
+/* SETTINGS */
+.sgrid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.sgrid2{grid-template-columns:1fr}}
+.thgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thcard{border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:var(--tr)}.thcard.active{border-color:var(--primary)}
+.thp{height:44px;display:flex}.thps{width:30%}.thpm{flex:1}
+.thn{padding:6px;font-size:11px;font-weight:600;text-align:center;background:var(--surface);border-top:1px solid var(--border)}
+.pl{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:200px;overflow-y:auto}
+.pi{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.pn{font-size:13px;font-weight:500}.padd{display:flex;gap:8px}
+.ptpc{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);margin-bottom:8px;flex-wrap:wrap}
+.ptcd{width:28px;height:28px;border-radius:8px;flex-shrink:0;cursor:pointer;border:2px solid rgba(0,0,0,.1)}
+/* PWD SCREEN */
+.pwd-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh}
+.pwd-box{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow-lg);padding:40px;max-width:400px;width:100%;text-align:center}
+.pwd-icon{width:64px;height:64px;border-radius:20px;background:var(--primary);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#fff}
+/* TOAST */
+.toc{position:fixed;top:14px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{padding:11px 14px;border-radius:10px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;min-width:240px;animation:sIn .3s ease;background:var(--surface);border:1px solid var(--border);color:var(--text)}
+.toast.success{border-left:4px solid var(--success)}.toast.error{border-left:4px solid var(--danger)}.toast.info{border-left:4px solid var(--info)}
+@keyframes sIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.flex{display:flex}.g2{gap:8px}.g3{gap:12px}.mt3{margin-top:12px}.mt4{margin-top:16px}.mb3{margin-bottom:12px}
+.sm{font-size:13px}.xs{font-size:11px}.bld{font-weight:700}
+.cp{color:var(--primary)}.cok{color:var(--success)}.cko{color:var(--danger)}.cm{color:var(--text2)}
+.hidden{display:none!important}.wf{width:100%}
+@media(max-width:800px){.dash2col{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body data-theme="ocean">
+<div class="sbo" id="sbo" onclick="closeMob()"></div>
+<div class="app">
+  <aside class="sb" id="sb">
+    <div class="sbh"><div class="sbl">PR</div><div class="sbb">Pointage<span>RH</span></div></div>
+    <div class="sbt" id="sbt" onclick="toggleSB()"><i class="fa fa-chevron-left" id="sbic"></i></div>
+    <nav class="sbn">
+      <div class="st" id="st-main">PRINCIPAL</div>
+      <div class="ni active" onclick="go('dashboard')" id="nav-dashboard"><span class="nic"><i class="fa fa-chart-line"></i></span><span class="nil" id="lbl-dashboard">Tableau de bord</span></div>
+      <div class="ni" onclick="go('employes')" id="nav-employes"><span class="nic"><i class="fa fa-users"></i></span><span class="nil" id="lbl-employes">Liste Employés</span></div>
+      <div class="ni" onclick="go('pointage')" id="nav-pointage"><span class="nic"><i class="fa fa-clock"></i></span><span class="nil" id="lbl-pointage">Pointage</span></div>
+      <div class="ni" onclick="go('absences')" id="nav-absences"><span class="nic"><i class="fa fa-calendar-xmark"></i></span><span class="nil" id="lbl-absences">Suivi Absences</span></div>
+      <div class="st" id="st-config" style="margin-top:8px">CONFIGURATION</div>
+      <div class="ni" onclick="go('parametres')" id="nav-parametres"><span class="nic"><i class="fa fa-gear"></i></span><span class="nil" id="lbl-parametres">Paramètres</span></div>
+    </nav>
+    <div class="sbf"><div class="sbu"><div class="ua">AD</div><div><div class="un">Administrateur</div><div class="ur">Super Admin</div></div></div></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="tbl">
+        <button class="tbb ham" onclick="openMob()"><i class="fa fa-bars"></i></button>
+        <div class="ptitle" id="ptitle">Tableau de bord</div>
+      </div>
+      <div class="tbr">
+        <div class="msel"><select id="gM" onchange="rerender()"></select><select id="gY" onchange="rerender()"><option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option></select></div>
+        <button class="tbb" onclick="exportView()"><i class="fa fa-download"></i></button>
+        <button class="tbb"><i class="fa fa-bell"></i><span class="nbadge">3</span></button>
+        <button class="tbb" id="langBtn" onclick="toggleLang()" style="font-size:11px;font-weight:800;letter-spacing:.5px" title="Langue / Language"><i class="fa fa-globe"></i> 🇫🇷 FR</button>
+        <button class="tbb" onclick="tFS()"><i class="fa fa-expand"></i></button>
+      </div>
+    </div>
+    <div class="content" id="mainView"></div>
+  </div>
+</div>
+<div class="toc" id="toc"></div>
+<div class="mov" id="mov" onclick="closeMOv(event)">
+  <div class="modal" id="modal">
+    <div class="mh"><div class="mt2" id="mTit"></div><button class="mx" onclick="closeM()"><i class="fa fa-xmark"></i></button></div>
+    <div class="mb2" id="mBod"></div>
+    <div class="mf" id="mFtr"></div>
+  </div>
+</div>
+<script>
+/* ═══════════════════════════════════
+   TRADUCTIONS FR / EN
+═══════════════════════════════════ */
+let lang = localStorage.getItem('prhLang')||'fr';
+
+const TR = {
+  fr:{
+    /* Nav */
+    dashboard:'Tableau de bord', employes:'Liste Employés', pointage:'Pointage',
+    absences:'Suivi Absences', parametres:'Paramètres',
+    navMain:'PRINCIPAL', navConfig:'CONFIGURATION',
+    /* Mois */
+    months:['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+    mshort:['Jan','Fév','Mar','Avr','Mai','Jun','Juil','Aoû','Sep','Oct','Nov','Déc'],
+    days:['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'],
+    /* Dashboard */
+    totalEmp:'Total Employés', active:'Actifs', inactive:'Inactifs', genderSplit:'Répartition H/F',
+    presRate:'Taux Présence', absRate:'Taux Absentéisme',
+    presByDept:'Présences par Service', genderDist:'Répartition H/F',
+    effByDept:'Effectif par Département', synthByFunc:'Synthèse par Fonction',
+    allDepts:'Tous dép.', totalLbl:'TOTAL', males:'Hommes', females:'Femmes',
+    top5abs:'Top 5 Absences', top5sick:'Top 5 Arrêts Maladie',
+    progression:'Progression', days2:'Jours',
+    /* Employés */
+    addEmp:'Ajouter', searchEmp:'Rechercher employé…', allSvc:'Tous services',
+    allCnt:'Tous contrats', showInact:'Inactifs',
+    col_rank:'#', col_hire:'Date Emb.', col_name:'Nom & Prénom', col_mat:'Matricule',
+    col_fct:'Fonction', col_cnt:'Contrat', col_svc:'Service', col_sfct:'Sous-Fonction',
+    col_eq:'Équipe', col_badge:'Nr Badge', col_st:'Statut', col_end:'Date Arrêt',
+    col_anc:'Ancienneté', col_absT:'Abs.Total', col_act:'Actions',
+    st_active:'● Actif', st_inactive:'○ Inactif',
+    addEmpTitle:'Ajouter Employé', editEmpTitle:'Modifier Employé',
+    lbl_civ:'Civilité', lbl_civNote:'(statistiques H/F)',
+    lbl_sex:'Sexe', male:'Masculin', female:'Féminin',
+    lbl_nom:'Nom *', lbl_pre:'Prénom *', lbl_mat:'Matricule *', lbl_badge:'Nr Badge',
+    lbl_svc:'Service *', lbl_fct:'Fonction *', lbl_sfct:'Sous-Fonction', lbl_eq:'Équipe',
+    lbl_cnt:'Contrat *', lbl_st:'Statut', lbl_hire:'Date Embauche *', lbl_end:'Date Arrêt',
+    save:'Enregistrer', cancel:'Annuler',
+    msg_empSaved:'Employé modifié', msg_empAdded:'Employé ajouté', msg_empDeleted:'Employé supprimé',
+    msg_nameReq:'Nom et prénom requis',
+    /* Pointage */
+    legend:'LÉGENDE :',
+    lockInfo:'Cliquez le cadenas pour verrouiller. Mot de passe requis pour déverrouiller.',
+    col_svc2:'Service', col_nameP:'Nom & Prénom', col_eq2:'Éq.', col_fct2:'Fonction',
+    allTeams:'Toutes équipes', grouped:'Groupé',
+    massTitle:'Pointage Groupé', massDesc:'Appliquer un statut à tous les employés visibles.',
+    lbl_from:'Du jour', lbl_to:'Au jour', lbl_status:'Statut', lbl_svc3:'Service (vide = tous)',
+    allSvcs:'Tous', apply:'Appliquer',
+    msg_applied:'appliqué', msg_emp2:'emp., jours', msg_locked:'jours verrouillés ignorés',
+    unlockTitle:'🔒 Déverrouillage requis',
+    unlockDesc:'Saisissez le mot de passe pour déverrouiller le',
+    unlockBtn:'Déverrouiller', wrongPwd:'Mot de passe incorrect',
+    msg_locked2:'verrouillé 🔒', msg_unlocked:'déverrouillé ✓',
+    /* Absences */
+    tabDetail:'Détail journalier', tabRecap:'Récapitulatif',
+    allTypes:'Tous types', col_date:'Date', col_type:'Type',
+    absCount:'absence(s)',
+    /* Paramètres */
+    paramTitle:'Accès Paramètres',
+    paramDesc:'Saisissez le mot de passe administrateur.',
+    paramPlaceholder:'Mot de passe…', paramBtn:'Accéder aux paramètres',
+    lockParam:'Verrouiller les paramètres',
+    msg_paramOk:'Accès paramètres accordé',
+    sec_themes:'Thèmes', sec_svc:'Services', sec_fct:'Fonctions', sec_sfct:'Sous-Fonctions',
+    sec_hol:'Jours Fériés', sec_shifts:'Shifts', sec_ptypes:'Types de Pointage',
+    sec_pwd:'Changer le mot de passe',
+    lbl_curPwd:'Mot de passe actuel', lbl_newPwd:'Nouveau mot de passe', lbl_confPwd:'Confirmer',
+    btn_chgPwd:'Changer', btn_addShift:'Ajouter shift', btn_newType:'Nouveau type',
+    msg_pwdOk:'Mot de passe modifié', msg_pwdWrong:'Mot de passe incorrect',
+    msg_pwdMismatch:'Mots de passe différents', msg_pwdShort:'Minimum 4 caractères',
+    shiftAdd:'Ajouter Shift', shiftEdit:'Modifier Shift',
+    lbl_shiftName:'Nom', lbl_shiftStart:'Début', lbl_shiftEnd:'Fin',
+    msg_shiftSaved:'Shift enregistré', msg_shiftNameReq:'Nom requis',
+    msg_svcAdded:'Service ajouté', msg_fctAdded:'Fonction ajoutée',
+    msg_sfctAdded:'Sous-fonction ajoutée', msg_holAdded:'Jour férié ajouté',
+    ph_svc:'Nouveau service…', ph_fct:'Nouvelle fonction…', ph_sfct:'Nouvelle sous-fonction…',
+    absNote:'Cochez pour comptabiliser dans les totaux d\'absences.',
+    lbl_abbr:'Abréviation * (ex: HS)', lbl_lbl:'Libellé *', lbl_color:'Couleur',
+    lbl_isAbs:'Compte comme absence', lbl_notAbs:'Non compté', lbl_isAbsTag:'≡ Compte comme absence',
+    newPTTitle:'Nouveau Type de Pointage', btn_create:'Créer',
+    msg_abbrvReq:'Abréviation et libellé requis', msg_abbrvExists:'existe déjà',
+    msg_typeCreated:'créé', theme_lbl:'Thème :',
+    msg_svcDel:'Supprimer', msg_fctDel:'Supprimer', msg_sfctDel:'Supprimer', msg_ptDel:'Supprimer',
+    msg_empDel2:'Supprimer',
+    btn_addItem:'Ajouter',
+    msg_export:'Export Excel téléchargé', msg_exportInfo:'Export disponible sur Employés et Pointage',
+    yr:'a', mo:'m', dy:'j',
+  },
+  en:{
+    dashboard:'Dashboard', employes:'Employees', pointage:'Attendance',
+    absences:'Absence Tracking', parametres:'Settings',
+    navMain:'MAIN', navConfig:'CONFIGURATION',
+    months:['January','February','March','April','May','June','July','August','September','October','November','December'],
+    mshort:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    days:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    totalEmp:'Total Employees', active:'Active', inactive:'Inactive', genderSplit:'Gender Split',
+    presRate:'Attendance Rate', absRate:'Absenteeism Rate',
+    presByDept:'Attendance by Dept.', genderDist:'Gender Distribution',
+    effByDept:'Headcount by Department', synthByFunc:'Summary by Position',
+    allDepts:'All depts.', totalLbl:'TOTAL', males:'Males', females:'Females',
+    top5abs:'Top 5 Absences', top5sick:'Top 5 Sick Leave',
+    progression:'Progress', days2:'Days',
+    addEmp:'Add', searchEmp:'Search employee…', allSvc:'All departments',
+    allCnt:'All contracts', showInact:'Inactive',
+    col_rank:'#', col_hire:'Hire Date', col_name:'Name', col_mat:'ID',
+    col_fct:'Position', col_cnt:'Contract', col_svc:'Department', col_sfct:'Sub-Position',
+    col_eq:'Team', col_badge:'Badge Nr', col_st:'Status', col_end:'End Date',
+    col_anc:'Seniority', col_absT:'Abs.Total', col_act:'Actions',
+    st_active:'● Active', st_inactive:'○ Inactive',
+    addEmpTitle:'Add Employee', editEmpTitle:'Edit Employee',
+    lbl_civ:'Title', lbl_civNote:'(gender statistics)',
+    lbl_sex:'Gender', male:'Male', female:'Female',
+    lbl_nom:'Last Name *', lbl_pre:'First Name *', lbl_mat:'Employee ID *', lbl_badge:'Badge Nr',
+    lbl_svc:'Department *', lbl_fct:'Position *', lbl_sfct:'Sub-Position', lbl_eq:'Team',
+    lbl_cnt:'Contract *', lbl_st:'Status', lbl_hire:'Hire Date *', lbl_end:'End Date',
+    save:'Save', cancel:'Cancel',
+    msg_empSaved:'Employee updated', msg_empAdded:'Employee added', msg_empDeleted:'Employee deleted',
+    msg_nameReq:'Last name and first name required',
+    legend:'LEGEND :',
+    lockInfo:'Click the lock to lock a day. Password required to unlock.',
+    col_svc2:'Dept.', col_nameP:'Name', col_eq2:'Tm.', col_fct2:'Position',
+    allTeams:'All teams', grouped:'Group',
+    massTitle:'Group Attendance', massDesc:'Apply a status to all visible employees.',
+    lbl_from:'From day', lbl_to:'To day', lbl_status:'Status', lbl_svc3:'Dept. (empty = all)',
+    allSvcs:'All', apply:'Apply',
+    msg_applied:'applied', msg_emp2:'emp., days', msg_locked:'locked days skipped',
+    unlockTitle:'🔒 Unlock required',
+    unlockDesc:'Enter the password to unlock',
+    unlockBtn:'Unlock', wrongPwd:'Incorrect password',
+    msg_locked2:'locked 🔒', msg_unlocked:'unlocked ✓',
+    tabDetail:'Daily Detail', tabRecap:'Summary',
+    allTypes:'All types', col_date:'Date', col_type:'Type',
+    absCount:'absence(s)',
+    paramTitle:'Settings Access',
+    paramDesc:'Enter the administrator password.',
+    paramPlaceholder:'Password…', paramBtn:'Access Settings',
+    lockParam:'Lock Settings',
+    msg_paramOk:'Settings access granted',
+    sec_themes:'Themes', sec_svc:'Departments', sec_fct:'Positions', sec_sfct:'Sub-Positions',
+    sec_hol:'Public Holidays', sec_shifts:'Shifts', sec_ptypes:'Attendance Types',
+    sec_pwd:'Change Password',
+    lbl_curPwd:'Current password', lbl_newPwd:'New password', lbl_confPwd:'Confirm',
+    btn_chgPwd:'Change', btn_addShift:'Add shift', btn_newType:'New type',
+    msg_pwdOk:'Password changed', msg_pwdWrong:'Incorrect current password',
+    msg_pwdMismatch:'Passwords do not match', msg_pwdShort:'Minimum 4 characters',
+    shiftAdd:'Add Shift', shiftEdit:'Edit Shift',
+    lbl_shiftName:'Name', lbl_shiftStart:'Start', lbl_shiftEnd:'End',
+    msg_shiftSaved:'Shift saved', msg_shiftNameReq:'Name required',
+    msg_svcAdded:'Department added', msg_fctAdded:'Position added',
+    msg_sfctAdded:'Sub-position added', msg_holAdded:'Holiday added',
+    ph_svc:'New department…', ph_fct:'New position…', ph_sfct:'New sub-position…',
+    absNote:'Check to count this type in absence totals.',
+    lbl_abbr:'Abbreviation * (e.g. OT)', lbl_lbl:'Label *', lbl_color:'Color',
+    lbl_isAbs:'Counts as absence', lbl_notAbs:'Not counted', lbl_isAbsTag:'≡ Counts as absence',
+    newPTTitle:'New Attendance Type', btn_create:'Create',
+    msg_abbrvReq:'Abbreviation and label required', msg_abbrvExists:'already exists',
+    msg_typeCreated:'created', theme_lbl:'Theme:',
+    msg_svcDel:'Delete', msg_fctDel:'Delete', msg_sfctDel:'Delete', msg_ptDel:'Delete',
+    msg_empDel2:'Delete',
+    btn_addItem:'Add',
+    msg_export:'Excel export downloaded', msg_exportInfo:'Export available on Employees and Attendance',
+    yr:'y', mo:'m', dy:'d',
+  }
+};
+function T(k){return (TR[lang]||TR.fr)[k]||k}
+
+function toggleLang(){
+  lang = lang==='fr'?'en':'fr';
+  localStorage.setItem('prhLang',lang);
+  applyLangUI();
+  rerender();
+}
+
+function applyLangUI(){
+  /* Bouton langue — affiche la langue active et l'autre disponible */
+  const btn=document.getElementById('langBtn');
+  if(btn){btn.innerHTML=`<i class="fa fa-globe"></i> ${lang==='fr'?'🇫🇷 FR':'🇬🇧 EN'}`;btn.title=lang==='fr'?'Switch to English':'Passer en Français';}
+  /* Sidebar labels */
+  const map={dashboard:'dashboard',employes:'employes',pointage:'pointage',absences:'absences',parametres:'parametres'};
+  Object.entries(map).forEach(([k])=>{
+    const el=document.getElementById('lbl-'+k);if(el)el.textContent=T(k);
+  });
+  const sm=document.getElementById('st-main');if(sm)sm.textContent=T('navMain');
+  const sc=document.getElementById('st-config');if(sc)sc.textContent=T('navConfig');
+  /* Page title */
+  const pt=document.getElementById('ptitle');if(pt)pt.textContent=T(curPage);
+  /* Mois selector */
+  const gm=document.getElementById('gM');
+  if(gm){const cur=parseInt(gm.value)||new Date().getMonth()+1;gm.innerHTML=T('mshort').map((mn,i)=>`<option value="${i+1}"${cur===i+1?' selected':''}>${mn}</option>`).join('');}
+}
+
+/* ═══════════════════════════════════
+   DONNÉES
+═══════════════════════════════════ */
+const EQUIPES=['A','B','C','D'],CIV=['M.','Mme','Dr.','Pr.'],CONTRATS=['CDI','CDD','Stage','Alternance','Intérim'];
+let SERVICES=['Production','RH','Finance','Logistique','Commercial','IT','Direction','Maintenance'];
+let FONCTIONS=['Opérateur','Technicien','Ingénieur','Chef de service','Directeur','Comptable','RH Manager','Commercial','Informaticien'];
+let SOUS_FCT=['Dev Frontend','Dev Backend','Ligne A','Ligne B','Recrutement','Comptabilité','Transport','Électricité','Ventes','Direction Générale'];
+let PT_TYPES=[
+  {k:'P', l:'Présent',     col:'#10b981',abs:false},{k:'A', l:'Absent',      col:'#ef4444',abs:true},
+  {k:'R', l:'Repos',       col:'#64748b',abs:false},{k:'ML',l:'Maladie',     col:'#f59e0b',abs:false},
+  {k:'CG',l:'Congé',       col:'#06b6d4',abs:false},{k:'FE',l:'Férié',       col:'#8b5cf6',abs:false},
+  {k:'PM',l:'Permission',  col:'#f97316',abs:true}, {k:'AT',l:'Acc.Travail', col:'#dc2626',abs:true},
+  {k:'MT',l:'Mi-temps',    col:'#38bdf8',abs:false},{k:'MS',l:'Mis.Service', col:'#3b82f6',abs:false},
+];
+function getPT(k){return PT_TYPES.find(t=>t.k===k)||null}
+function ptKeys(){return PT_TYPES.map(t=>t.k)}
+
+let employees=[
+  {id:1,civ:'M.',nom:'KONÉ',pre:'Abdoulaye',mat:'EMP001',fct:'Ingénieur',cnt:'CDI',svc:'IT',sfct:'Dev Frontend',eq:'A',badge:'B001',st:'Actif',de:'2021-03-15',da:'',sx:'M'},
+  {id:2,civ:'Mme',nom:'TRAORÉ',pre:'Fatima',mat:'EMP002',fct:'RH Manager',cnt:'CDI',svc:'RH',sfct:'Recrutement',eq:'B',badge:'B002',st:'Actif',de:'2019-07-01',da:'',sx:'F'},
+  {id:3,civ:'M.',nom:'DIALLO',pre:'Ibrahim',mat:'EMP003',fct:'Opérateur',cnt:'CDD',svc:'Production',sfct:'Ligne A',eq:'A',badge:'B003',st:'Actif',de:'2023-01-10',da:'',sx:'M'},
+  {id:4,civ:'Mme',nom:'BAMBA',pre:'Awa',mat:'EMP004',fct:'Comptable',cnt:'CDI',svc:'Finance',sfct:'Comptabilité',eq:'C',badge:'B004',st:'Actif',de:'2020-05-20',da:'',sx:'F'},
+  {id:5,civ:'M.',nom:'COULIBALY',pre:'Mamadou',mat:'EMP005',fct:'Technicien',cnt:'CDI',svc:'Maintenance',sfct:'Électricité',eq:'B',badge:'B005',st:'Inactif',de:'2018-02-01',da:'2024-12-31',sx:'M'},
+  {id:6,civ:'Dr.',nom:'SÉRY',pre:'Emmanuel',mat:'EMP006',fct:'Directeur',cnt:'CDI',svc:'Direction',sfct:'Direction Générale',eq:'D',badge:'B006',st:'Actif',de:'2015-09-01',da:'',sx:'M'},
+  {id:7,civ:'Mme',nom:'OUATTARA',pre:'Mariam',mat:'EMP007',fct:'Commercial',cnt:'CDD',svc:'Commercial',sfct:'Ventes',eq:'A',badge:'B007',st:'Actif',de:'2024-03-01',da:'',sx:'F'},
+  {id:8,civ:'M.',nom:'YAPI',pre:'Kouamé',mat:'EMP008',fct:'Technicien',cnt:'CDI',svc:'Logistique',sfct:'Transport',eq:'C',badge:'B008',st:'Actif',de:'2022-11-14',da:'',sx:'M'},
+];
+let ptd={},lockedDays={},feries=['2026-01-01','2026-05-01','2026-08-07'];
+/* shiftData : stocke le shift assigné par employé+date { 'MAT-Y-M-D': 'Matin' } */
+let shiftData={};
+let cfg={theme:localStorage.getItem('prhTheme')||'ocean',pwd:'1234',paramUnlocked:false,showInact:false,
+  shifts:[{n:'Matin',s:'07:00',e:'15:00'},{n:'Soir',s:'15:00',e:'23:00'},{n:'Nuit',s:'23:00',e:'07:00'}]};
+
+document.body.setAttribute('data-theme',cfg.theme);
+
+(()=>{const y=2026,m=3;
+  employees.filter(e=>e.st==='Actif').forEach(e=>{
+    for(let d=1;d<=dim(m,y);d++){
+      const dw=new Date(y,m-1,d).getDay(),k=`${e.mat}-${y}-${m}-${d}`;
+      const fer=feries.includes(`${y}-${pad(m)}-${pad(d)}`);
+      if(fer)ptd[k]='FE';else if(dw===0||dw===6)ptd[k]='R';
+      else{const r=Math.random();ptd[k]=r<.75?'P':r<.83?'A':r<.88?'ML':r<.93?'CG':'PM';}
+    }
+  });
+})();
+
+/* ═══════════════════════════════════
+   HELPERS
+═══════════════════════════════════ */
+function dim(m,y){return new Date(y,m,0).getDate()}
+function dow(d,m,y){return new Date(y,m-1,d).getDay()}
+function isFer(d,m,y){return feries.includes(`${y}-${pad(m)}-${pad(d)}`)}
+function pad(n){return String(n).padStart(2,'0')}
+function isLocked(d,m,y){return !!lockedDays[`${y}-${pad(m)}-${pad(d)}`]}
+function anc(de,da=''){
+  const s=new Date(de),e=da?new Date(da):new Date();
+  let yr=e.getFullYear()-s.getFullYear(),mo=e.getMonth()-s.getMonth(),d=e.getDate()-s.getDate();
+  if(d<0){mo--;d+=new Date(e.getFullYear(),e.getMonth(),0).getDate()}
+  if(mo<0){yr--;mo+=12}
+  return`${yr}${T('yr')} ${mo}${T('mo')} ${d}${T('dy')}`
+}
+function gM(){return parseInt(document.getElementById('gM').value)}
+function gY(){return parseInt(document.getElementById('gY').value)}
+function actifs(){return employees.filter(e=>e.st==='Actif')}
+function mPTfull(e,m,y){
+  const c={};PT_TYPES.forEach(t=>c[t.k]=0);
+  for(let d=1;d<=dim(m,y);d++){const v=ptd[`${e.mat}-${y}-${m}-${d}`];if(v&&c[v]!==undefined)c[v]++;}
+  c._abs=PT_TYPES.filter(t=>t.abs).reduce((s,t)=>s+c[t.k],0);
+  c._pres=c['P']||0;return c;
+}
+function nxtId(){return Math.max(0,...employees.map(e=>e.id))+1}
+function cmpAN(va,vb){
+  const re=/^([A-Za-zÀ-öø-ÿ\s]*)(\d*)(.*)$/;
+  const ma=String(va).match(re),mb=String(vb).match(re);
+  const pa=(ma[1]||'').toUpperCase(),pb=(mb[1]||'').toUpperCase();
+  if(pa!==pb)return pa.localeCompare(pb,'fr',{sensitivity:'base'});
+  const na=parseInt(ma[2]||'0'),nb=parseInt(mb[2]||'0');
+  if(na!==nb)return na-nb;
+  return String(ma[3]||'').localeCompare(String(mb[3]||''));
+}
+
+/* ═══════════════════════════════════
+   SIDEBAR / NAV
+═══════════════════════════════════ */
+let sbCol=window.innerWidth<1100;
+function toggleSB(){sbCol=!sbCol;document.getElementById('sb').classList.toggle('col',sbCol);document.getElementById('sbic').className=sbCol?'fa fa-chevron-right':'fa fa-chevron-left'}
+function openMob(){document.getElementById('sb').classList.add('mob');document.getElementById('sbo').classList.add('show')}
+function closeMob(){document.getElementById('sb').classList.remove('mob');document.getElementById('sbo').classList.remove('show')}
+
+/* ── MODAL ── */
+function openM(){document.getElementById('mov').classList.add('open')}
+function closeM(){document.getElementById('mov').classList.remove('open')}
+function closeMOv(e){if(e.target===document.getElementById('mov'))closeM()}
+
+/* ── TOAST ── */
+function toast(msg,type='info',dur=3200){
+  const tc=document.getElementById('toc');
+  if(!tc)return;
+  const ic={success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-circle-info'};
+  const cl={success:'#10b981',error:'#ef4444',info:'#06b6d4'};
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<i class="fa ${ic[type]||'fa-circle-info'}" style="color:${cl[type]||'#06b6d4'}"></i>${msg}`;
+  tc.appendChild(t);
+  setTimeout(()=>{t.style.animation='sIn .3s ease reverse';setTimeout(()=>t.remove(),300);},dur);
+}
+if(sbCol)document.getElementById('sb').classList.add('col');
+
+let curPage='dashboard';
+function go(p){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const el=document.getElementById('nav-'+p);if(el)el.classList.add('active');
+  document.getElementById('ptitle').textContent=T(p);
+  curPage=p;closeMob();render(p);
+}
+function rerender(){render(curPage)}
+function render(p){
+  const v=document.getElementById('mainView');
+  if(p==='dashboard'){v.innerHTML=rDash();initBars();}
+  else if(p==='employes')v.innerHTML=rEmps();
+  else if(p==='pointage')v.innerHTML=rPT();
+  else if(p==='absences')v.innerHTML=rAbs();
+  else if(p==='parametres')v.innerHTML=rParam();
+}
+
+/* ═══════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════ */
+function rDash(){
+  const m=gM(),y=gY(),lbl=T('months')[m-1]+' '+y;
+  const ac=actifs(),ina=employees.filter(e=>e.st==='Inactif');
+  const H=ac.filter(e=>e.sx==='M').length,F=ac.filter(e=>e.sx==='F').length;
+  let ouv=0;for(let d=1;d<=dim(m,y);d++){const dw=dow(d,m,y);if(dw>0&&dw<7&&!isFer(d,m,y))ouv++;}
+  let totP=0,totA=0;
+  ac.forEach(e=>{const c=mPTfull(e,m,y);totP+=c._pres;totA+=c._abs;});
+  const tot=ac.length*ouv||1;
+  const txP=Math.round(totP/tot*100),txA=Math.round(totA/tot*100);
+  /* Effectif par dept */
+  const svcMap={};
+  ac.forEach(e=>{if(!svcMap[e.svc])svcMap[e.svc]={total:0,fonctions:{}};svcMap[e.svc].total++;if(!svcMap[e.svc].fonctions[e.fct])svcMap[e.svc].fonctions[e.fct]=0;svcMap[e.svc].fonctions[e.fct]++;});
+  const svcE=Object.entries(svcMap).sort((a,b)=>b[1].total-a[1].total);
+  const maxS=Math.max(1,...svcE.map(([,v])=>v.total));
+  /* Synthèse fonctions */
+  const fctC={};ac.forEach(e=>{if(!fctC[e.fct])fctC[e.fct]=0;fctC[e.fct]++;});
+  const fctE=Object.entries(fctC).sort((a,b)=>b[1]-a[1]);
+  const maxF=Math.max(1,...fctE.map(([,v])=>v));
+  const COLS=['var(--primary)','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899'];
+  /* Top5 */
+  const rk=ac.map(e=>({...e,...mPTfull(e,m,y)}));
+  const absRk=[...rk].sort((a,b)=>b._abs-a._abs).slice(0,5);
+  const malRk=[...rk].sort((a,b)=>(b.ML||0)-(a.ML||0)).slice(0,5);
+  const mxA=Math.max(1,...absRk.map(e=>e._abs));
+  const mxM=Math.max(1,...malRk.map(e=>e.ML||0));
+  const rc=['#f59e0b','#94a3b8','#b45309','var(--primary)','var(--primary)'];
+  function t5(rows,key,color,mx){
+    return`<table class="t5t"><thead><tr><th style="width:32px">#</th><th>${T('col_name')}</th><th>${T('col_svc')}</th><th>${T('progression')}</th><th>${T('days2')}</th></tr></thead><tbody>
+    ${rows.map((e,i)=>`<tr><td><div class="t5r" style="background:${rc[i]}">${i+1}</div></td><td><b>${e.nom}</b> ${e.pre}</td><td class="xs cm">${e.svc}</td>
+    <td><div class="bpw"><div class="bpb"><div class="bpf" style="width:${Math.round((e[key]||0)/mx*100)}%;background:${color}"></div></div><span class="bpv" style="color:${color}">${e[key]||0}</span></div></td>
+    <td class="bld" style="color:${color}">${e[key]||0}j</td></tr>`).join('')}
+    </tbody></table>`;
+  }
+  return`
+  <div class="sgrid">
+    <div class="sc"><div class="sic" style="background:rgba(26,86,232,.1);color:var(--primary)"><i class="fa fa-users"></i></div><div><div class="sv cp">${employees.length}</div><div class="sl">${T('totalEmp')}</div></div></div>
+    <div class="sc"><div class="sic" style="background:rgba(16,185,129,.1);color:#10b981"><i class="fa fa-user-check"></i></div><div><div class="sv" style="color:#10b981">${ac.length}</div><div class="sl">${T('active')}</div></div></div>
+    <div class="sc"><div class="sic" style="background:rgba(239,68,68,.1);color:#ef4444"><i class="fa fa-user-xmark"></i></div><div><div class="sv" style="color:#ef4444">${ina.length}</div><div class="sl">${T('inactive')}</div></div></div>
+    <div class="sc"><div class="sic" style="background:rgba(6,182,212,.1);color:#06b6d4"><i class="fa fa-venus-mars"></i></div><div><div class="sv" style="color:#06b6d4">${H}H/${F}F</div><div class="sl">${T('genderSplit')}</div></div></div>
+    <div class="sc"><div class="sic" style="background:rgba(245,158,11,.1);color:#f59e0b"><i class="fa fa-calendar-check"></i></div><div style="flex:1"><div class="sv" style="color:#f59e0b">${txP}%</div><div class="sl">${T('presRate')} — ${lbl}</div><div class="pb"><div class="pf" style="width:${txP}%;background:#f59e0b"></div></div></div></div>
+    <div class="sc"><div class="sic" style="background:rgba(239,68,68,.1);color:#ef4444"><i class="fa fa-calendar-xmark"></i></div><div style="flex:1"><div class="sv" style="color:#ef4444">${txA}%</div><div class="sl">${T('absRate')} — ${lbl}</div><div class="pb"><div class="pf" style="width:${txA}%;background:#ef4444"></div></div></div></div>
+  </div>
+  <div class="cgrid">
+    <div class="ca"><div class="cat"><i class="fa fa-chart-bar cp"></i> ${T('presByDept')} — ${lbl}</div><div class="bc" id="dbars"></div></div>
+    <div class="ca"><div class="cat"><i class="fa fa-chart-pie cp"></i> ${T('genderDist')}</div>
+      <!-- Donut centré + chiffres grands en dessous -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+        <svg width="130" height="130" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3.8"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--primary)" stroke-width="3.8" stroke-dasharray="${Math.round(H/(H+F||1)*100)} 100" stroke-dashoffset="25" transform="rotate(-90 18 18)"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="#ec4899" stroke-width="3.8" stroke-dasharray="${Math.round(F/(H+F||1)*100)} 100" stroke-dashoffset="${25-Math.round(H/(H+F||1)*100)}" transform="rotate(-90 18 18)"/>
+          <text x="18" y="17" text-anchor="middle" font-size="5" fill="var(--text2)">Total</text>
+          <text x="18" y="22" text-anchor="middle" font-size="7" fill="var(--text)" font-weight="bold">${ac.length}</text>
+        </svg>
+        <!-- Chiffres H/F grands et bien lisibles -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%">
+          <div style="text-align:center;padding:12px;background:var(--primary)08;border-radius:10px;border:1px solid var(--primary)20">
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--primary)"></div>
+              <span style="font-size:12px;font-weight:600;color:var(--text2)">${T('males')}</span>
+            </div>
+            <div style="font-family:var(--fh);font-weight:800;font-size:32px;color:var(--primary);line-height:1">${H}</div>
+            <div style="font-size:11px;font-weight:600;color:var(--primary);opacity:.7;margin-top:2px">${ac.length>0?Math.round(H/ac.length*100):0}%</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:rgba(236,72,153,.08);border-radius:10px;border:1px solid rgba(236,72,153,.2)">
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px">
+              <div style="width:10px;height:10px;border-radius:50%;background:#ec4899"></div>
+              <span style="font-size:12px;font-weight:600;color:var(--text2)">${T('females')}</span>
+            </div>
+            <div style="font-family:var(--fh);font-weight:800;font-size:32px;color:#ec4899;line-height:1">${F}</div>
+            <div style="font-size:11px;font-weight:600;color:#ec4899;opacity:.7;margin-top:2px">${ac.length>0?Math.round(F/ac.length*100):0}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="dash2col">
+    <div class="card">
+      <div class="ch"><div class="ct"><i class="fa fa-building cp"></i> ${T('effByDept')}</div><span class="tag tbl2">${ac.length} ${T('active')}</span></div>
+      <div class="cb" style="padding:14px">
+        ${svcE.map(([svc,data],si)=>{
+          const col=COLS[si%COLS.length],pct=Math.round(data.total/maxS*100);
+          const fL=Object.entries(data.fonctions).sort((a,b)=>b[1]-a[1]);
+          const mxF=Math.max(1,...fL.map(([,v])=>v));
+          return`<div class="svc-block">
+            <div class="svc-block-hdr">
+              <div class="flex" style="align-items:center;gap:10px"><div class="svc-dot" style="background:${col}"></div><span class="svc-name">${svc}</span></div>
+              <div class="flex" style="align-items:center;gap:10px"><div style="flex:1;height:7px;background:var(--border);border-radius:20px;overflow:hidden;min-width:60px"><div style="height:100%;border-radius:20px;background:${col};width:${pct}%"></div></div><span class="svc-total" style="background:${col}18;color:${col}">${data.total}</span></div>
+            </div>
+            <div class="svc-fct-list">${fL.map(([fct,n])=>`<div class="fct-row"><div class="fct-label" title="${fct}"><i class="fa fa-angle-right" style="color:${col};margin-right:4px"></i>${fct}</div><div class="fct-bar-bg"><div class="fct-bar-fill" style="width:${Math.round(n/mxF*100)}%;background:${col}"></div></div><span class="fct-val" style="color:${col}">${n}</span></div>`).join('')}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><div class="ct"><i class="fa fa-briefcase cp"></i> ${T('synthByFunc')}</div><span class="tag tbl2">${T('allDepts')}</span></div>
+      <div class="cb" style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border);background:var(--surface2)">${T('col_fct')}</th>
+            <th style="padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border);background:var(--surface2);text-align:center">${T('active')}</th>
+            <th style="padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border);background:var(--surface2)">${T('progression')}</th>
+            <th style="padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border);background:var(--surface2);text-align:center">%</th>
+          </tr></thead>
+          <tbody>${fctE.map(([fct,n],i)=>{const col=COLS[i%COLS.length],pct=Math.round(n/ac.length*100);return`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 12px;font-size:12px;font-weight:600">${fct}</td><td style="padding:8px 12px;text-align:center;font-weight:800;font-size:14px;color:${col}">${n}</td><td style="padding:8px 12px"><div style="height:8px;background:var(--border);border-radius:20px;overflow:hidden"><div style="height:100%;border-radius:20px;background:${col};width:${pct}%"></div></div></td><td style="padding:8px 12px;text-align:center;font-size:11px;font-weight:700;color:${col}">${pct}%</td></tr>`;}).join('')}</tbody>
+          <tfoot><tr style="background:var(--surface2)"><td style="padding:8px 12px;font-weight:700">${T('totalLbl')}</td><td style="padding:8px 12px;text-align:center;font-weight:800;font-size:15px;color:var(--primary)">${ac.length}</td><td></td><td style="padding:8px 12px;text-align:center;font-weight:700;color:var(--primary)">100%</td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" class="dash2col">
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-trophy" style="color:var(--warning)"></i> ${T('top5abs')} — ${lbl}</div></div><div style="overflow-x:auto">${t5(absRk,'_abs','#ef4444',mxA)}</div></div>
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-stethoscope" style="color:var(--danger)"></i> ${T('top5sick')} — ${lbl}</div></div><div style="overflow-x:auto">${t5(malRk,'ML','#f59e0b',mxM)}</div></div>
+  </div>`;
+}
+function initBars(){
+  const el=document.getElementById('dbars');if(!el)return;
+  const m=gM(),y=gY();const sp={};SERVICES.forEach(s=>sp[s]=0);
+  actifs().forEach(e=>{if(sp[e.svc]===undefined)sp[e.svc]=0;sp[e.svc]+=mPTfull(e,m,y)._pres;});
+  const mx=Math.max(1,...Object.values(sp));
+  const cols=['var(--primary)','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899'];
+  el.innerHTML=Object.entries(sp).map(([s,v],i)=>`<div class="bi"><div class="bv">${v}</div><div class="bar" style="height:${Math.max(v/mx*100,4)}%;background:${cols[i%cols.length]}"></div><div class="bl">${s.substring(0,4)}</div></div>`).join('');
+}
+
+/* ═══════════════════════════════════
+   EMPLOYÉS
+═══════════════════════════════════ */
+let eQ='',eFil={svc:'',cnt:''},eSort={col:'nom',asc:true};
+let empEditMode=false; /* Verrouillage modification employés */
+
+function rEmps(){
+  const m=gM(),y=gY(),FR=lang==='fr';
+  let list=[...employees];
+  if(!cfg.showInact)list=list.filter(e=>e.st==='Actif');
+  if(eFil.svc)list=list.filter(e=>e.svc===eFil.svc);
+  if(eFil.cnt)list=list.filter(e=>e.cnt===eFil.cnt);
+  if(eQ){const q=eQ.toLowerCase();list=list.filter(e=>[e.nom,e.pre,e.mat,e.badge,e.svc].some(v=>(v||'').toLowerCase().includes(q)));}
+  list.sort((a,b)=>{const r=cmpAN(a[eSort.col]||'',b[eSort.col]||'');return eSort.asc?r:-r;});
+  const ptH=PT_TYPES.map(t=>`<th title="${t.l}" style="background:${t.col}18;color:${t.col};border-bottom-color:${t.col}">${t.k}<br><span style="font-size:9px;font-weight:500;text-transform:none;opacity:.8">${t.l}</span></th>`).join('');
+
+  /* Barre de verrouillage édition */
+  const lockBar=empEditMode
+    ?`<div style="padding:8px 14px;background:rgba(16,185,129,.08);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#059669">
+          <i class="fa fa-pencil"></i> ${FR?'Mode modification activé — vous pouvez modifier et supprimer des employés':'Edit mode ON — you can edit and delete employees'}
+        </div>
+        <button class="btn bd bsm" onclick="empEditMode=false;render('employes')">
+          <i class="fa fa-lock"></i> ${FR?'Verrouiller':'Lock'}
+        </button>
+      </div>`
+    :`<div style="padding:8px 14px;background:rgba(239,68,68,.05);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)">
+          <i class="fa fa-lock" style="color:#ef4444"></i> ${FR?'Modifications verrouillées — saisissez le code pour modifier':'Edits locked — enter code to edit'}
+        </div>
+        <button class="btn bp bsm" onclick="askEmpEditUnlock()">
+          <i class="fa fa-lock-open"></i> ${FR?'Déverrouiller':'Unlock'}
+        </button>
+      </div>`;
+  return`
+  <div class="card" style="overflow:hidden">
+    <div class="toolbar">
+      <div class="sbox"><i class="fa fa-search"></i><input type="text" placeholder="${T('searchEmp')}" value="${eQ}" oninput="eQ=this.value;render('employes')"></div>
+      <select class="fc" style="width:auto;padding:7px 9px" onchange="eFil.svc=this.value;render('employes')">
+        <option value="">${T('allSvc')}</option>${SERVICES.map(s=>`<option value="${s}"${eFil.svc===s?' selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="fc" style="width:auto;padding:7px 9px" onchange="eFil.cnt=this.value;render('employes')">
+        <option value="">${T('allCnt')}</option>${CONTRATS.map(c=>`<option value="${c}"${eFil.cnt===c?' selected':''}>${c}</option>`).join('')}
+      </select>
+      <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;white-space:nowrap">
+        <input type="checkbox"${cfg.showInact?' checked':''} onchange="cfg.showInact=this.checked;render('employes')"> ${T('showInact')}
+      </label>
+      ${empEditMode?`<button class="btn bp bsm" onclick="openEmp()"><i class="fa fa-plus"></i> ${T('addEmp')}</button>`:''}
+      <button class="btn bo bsm" onclick="expEmps()"><i class="fa fa-file-excel"></i></button>
+      <button class="btn bp bsm" onclick="expEmpsPDF()"><i class="fa fa-file-pdf"></i></button>
+    </div>
+    ${lockBar}
+    <div class="tw"><div class="ti"><table>
+      <thead><tr>
+        <th style="position:sticky;left:0;z-index:4;background:var(--surface2)">${T('col_rank')}</th>
+        <th onclick="srtE('de')">${T('col_hire')}</th>
+        <th onclick="srtE('nom')">${T('col_name')}</th>
+        <th>${T('col_mat')}</th>
+        <th onclick="srtE('fct')">${T('col_fct')}</th>
+        <th>${T('col_cnt')}</th>
+        <th onclick="srtE('svc')">${T('col_svc')}</th>
+        <th>${T('col_sfct')}</th>
+        <th>${T('col_eq')}</th>
+        <th>${T('col_badge')}</th>
+        <th onclick="srtE('st')">${T('col_st')}</th>
+        <th>${T('col_end')}</th>
+        <th>${T('col_anc')}</th>
+        <th style="color:var(--primary)">Shift</th>
+        ${ptH}
+        <th style="background:rgba(239,68,68,.1);color:#dc2626">${T('col_absT')}</th>
+        <th>${T('col_act')}</th>
+      </tr></thead>
+      <tbody>${list.map((e,i)=>{
+        const ct=mPTfull(e,m,y);
+        const sx=e.sx==='F'?`<i class="fa fa-venus" style="color:#ec4899;font-size:10px" title="F"></i>`:`<i class="fa fa-mars" style="color:var(--primary);font-size:10px" title="M"></i>`;
+        const ptC=PT_TYPES.map(t=>{const v=ct[t.k]||0;return`<td style="text-align:center;font-weight:700;color:${v>0?t.col:'var(--text3)'}">${v}</td>`;}).join('');
+        /* Boutons actifs seulement si empEditMode */
+        const actBtns=empEditMode
+          ?`<button class="btn bsm bg2 bic" onclick="openEmp(${e.id})"><i class="fa fa-pencil"></i></button>
+             <button class="btn bsm bd bic" onclick="delE(${e.id})"><i class="fa fa-trash"></i></button>`
+          :`<button class="btn bsm bg2 bic" onclick="askEmpEditUnlock()" title="${FR?'Verrouillé':'Locked'}"><i class="fa fa-lock" style="color:#ef4444"></i></button>`;
+        return`<tr>
+          <td style="position:sticky;left:0;background:var(--surface);font-weight:700;color:var(--text2)">${i+1}</td>
+          <td>${e.de}</td><td>${sx} <b>${e.nom}</b> ${e.pre}</td>
+          <td><span class="tag tbl2">${e.mat}</span></td>
+          <td>${e.fct}</td>
+          <td><span class="tag ${e.cnt==='CDI'?'tok':'twn'}">${e.cnt}</span></td>
+          <td>${e.svc}</td><td class="cm xs">${e.sfct||'—'}</td>
+          <td style="text-align:center"><span class="tag tgr">Éq.${e.eq}</span></td>
+          <td>${e.badge||'—'}</td>
+          <td><span class="tag ${e.st==='Actif'?'tok':'tko'}">${e.st==='Actif'?T('st_active'):T('st_inactive')}</span></td>
+          <td>${e.da||'—'}</td><td class="xs cm">${anc(e.de,e.da)}</td>
+          <td style="text-align:center">${(()=>{const dy=dim(m,y);for(let d=dy;d>=1;d--){const sh=shiftData[e.mat+'-'+y+'-'+m+'-'+d];if(sh)return '<span class="tag tbl2" style="font-size:10px">'+sh+'</span>';}return'<span style="color:var(--text3);font-size:11px">—</span>';})()}</td>
+          ${ptC}
+          <td style="text-align:center;font-weight:700;color:#ef4444">${ct._abs}</td>
+          <td><div class="flex g2">${actBtns}</div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div></div>
+    <div style="padding:9px 14px;font-size:12px;color:var(--text2);border-top:1px solid var(--border)">${list.length} — ${T('months')[m-1]} ${y}</div>
+  </div>`;
+}
+function srtE(c){if(eSort.col===c)eSort.asc=!eSort.asc;else{eSort.col=c;eSort.asc=true;}render('employes')}
+
+function askEmpEditUnlock(){
+  const FR=lang==='fr';
+  document.getElementById('mTit').textContent=FR?'🔓 Déverrouiller les employés':'🔓 Unlock employee edits';
+  document.getElementById('modal').className='modal';
+  document.getElementById('mBod').innerHTML=`
+    <p class="sm cm mb3">${FR?'Saisissez le mot de passe pour pouvoir modifier ou supprimer des employés.':'Enter the password to edit or delete employees.'}</p>
+    <div class="fg"><label class="fl">${T('lbl_curPwd')}</label>
+      <input type="password" class="fc" id="empPwd" placeholder="••••" style="letter-spacing:4px;font-size:18px;text-align:center" onkeydown="if(event.key==='Enter')doEmpEditUnlock()">
+    </div>
+    <div id="empPwdErr" style="color:#ef4444;font-size:12px;display:none"><i class="fa fa-circle-xmark"></i> ${T('wrongPwd')}</div>`;
+  document.getElementById('mFtr').innerHTML=`
+    <button class="btn bg2" onclick="closeM()">${T('cancel')}</button>
+    <button class="btn bp" onclick="doEmpEditUnlock()"><i class="fa fa-lock-open"></i> ${FR?'Déverrouiller':'Unlock'}</button>`;
+  openM();
+  setTimeout(()=>document.getElementById('empPwd')?.focus(),100);
+}
+
+function doEmpEditUnlock(){
+  const FR=lang==='fr';
+  if(document.getElementById('empPwd')?.value!==cfg.pwd){
+    const err=document.getElementById('empPwdErr');
+    if(err){err.style.display='block';setTimeout(()=>err.style.display='none',2000);}
+    return;
+  }
+  empEditMode=true;
+  closeM();
+  render('employes');
+  toast(FR?'Mode modification employés activé ✓':'Employee edit mode activated ✓','success');
+}
+function openEmp(id=null){
+  const e=id?employees.find(x=>x.id===id):null;
+  document.getElementById('mTit').textContent=e?T('editEmpTitle'):T('addEmpTitle');
+  document.getElementById('modal').className='modal mlg';
+  document.getElementById('mBod').innerHTML=`
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_civ')} <span class="xs cm">${T('lbl_civNote')}</span></label>
+        <select class="fc" id="f0">${CIV.map(c=>`<option${e?.civ===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">${T('lbl_sex')}</label>
+        <select class="fc" id="f4"><option value="M"${e?.sx==='M'?' selected':''}>${T('male')}</option><option value="F"${e?.sx==='F'?' selected':''}>${T('female')}</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_nom')}</label><input class="fc" id="f1" value="${e?.nom||''}"></div>
+      <div class="fg"><label class="fl">${T('lbl_pre')}</label><input class="fc" id="f2" value="${e?.pre||''}"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_mat')}</label><input class="fc" id="f3" value="${e?.mat||'EMP'+String(nxtId()).padStart(3,'0')}"></div>
+      <div class="fg"><label class="fl">${T('lbl_badge')}</label><input class="fc" id="f5" value="${e?.badge||''}"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_svc')}</label><select class="fc" id="f6">${SERVICES.map(s=>`<option${e?.svc===s?' selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">${T('lbl_fct')}</label><select class="fc" id="f7">${FONCTIONS.map(f=>`<option${e?.fct===f?' selected':''}>${f}</option>`).join('')}</select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_sfct')}</label><select class="fc" id="f8">${SOUS_FCT.map(sf=>`<option${e?.sfct===sf?' selected':''}>${sf}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">${T('lbl_eq')}</label><select class="fc" id="f9">${EQUIPES.map(q=>`<option${e?.eq===q?' selected':''}>${q}</option>`).join('')}</select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_cnt')}</label><select class="fc" id="f10">${CONTRATS.map(c=>`<option${e?.cnt===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="fg"><label class="fl">${T('lbl_st')}</label><select class="fc" id="f11"><option value="Actif"${e?.st==='Actif'?' selected':''}>${T('st_active').replace('● ','')}</option><option value="Inactif"${e?.st==='Inactif'?' selected':''}>${T('st_inactive').replace('○ ','')}</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_hire')}</label><input type="date" class="fc" id="f12" value="${e?.de||''}"></div>
+      <div class="fg"><label class="fl">${T('lbl_end')}</label><input type="date" class="fc" id="f13" value="${e?.da||''}"></div>
+    </div>`;
+  document.getElementById('mFtr').innerHTML=`<button class="btn bg2" onclick="closeM()">${T('cancel')}</button><button class="btn bp" onclick="saveE(${id||'null'})"><i class="fa fa-save"></i> ${T('save')}</button>`;
+  openM();
+}
+function saveE(id){
+  const g=i=>document.getElementById('f'+i)?.value||'';
+  const nom=g(1).trim(),pre=g(2).trim();
+  if(!nom||!pre){toast(T('msg_nameReq'),'error');return}
+  const d={civ:g(0),nom:nom.toUpperCase(),pre,mat:g(3),sx:g(4),badge:g(5),svc:g(6),fct:g(7),sfct:g(8),eq:g(9),cnt:g(10),st:g(11),de:g(12),da:g(13)};
+  if(id){const i=employees.findIndex(e=>e.id===id);if(i>=0)employees[i]={...employees[i],...d};toast(T('msg_empSaved'),'success');}
+  else{employees.push({id:nxtId(),...d});toast(T('msg_empAdded'),'success');}
+  employees.sort((a,b)=>{const r=cmpAN(a.nom,b.nom);return r!==0?r:cmpAN(a.mat,b.mat);});
+  closeM();render('employes');
+}
+function delE(id){const e=employees.find(x=>x.id===id);if(!confirm(`${T('msg_empDel2')} ${e.nom} ${e.pre} ?`))return;employees=employees.filter(x=>x.id!==id);toast(T('msg_empDeleted'),'info');render('employes')}
+
+/* ═══════════════════════════════════
+   POINTAGE
+═══════════════════════════════════ */
+let ptFil={svc:'',eq:'',shift:'',date:''},ptQ='';
+/* Mode modification individuelle déverrouillé par mot de passe */
+let ptEditMode = false;
+
+function rPT(){
+  const m=gM(),y=gY(),days=dim(m,y);
+  const FR=lang==='fr';
+  let list=actifs();
+  if(ptFil.svc)  list=list.filter(e=>e.svc===ptFil.svc);
+  if(ptFil.eq)   list=list.filter(e=>e.eq===ptFil.eq);
+  if(ptFil.shift){
+    list=list.filter(e=>{
+      for(let d=1;d<=days;d++){
+        if(shiftData[e.mat+'-'+y+'-'+m+'-'+d]===ptFil.shift)return true;
+      }
+      return false;
+    });
+  }
+  if(ptQ){const q=ptQ.toLowerCase();list=list.filter(e=>[e.nom,e.pre,e.mat,e.svc,e.fct].some(v=>(v||'').toLowerCase().includes(q)));}
+
+  /* Si un jour est sélectionné : afficher seulement ce jour */
+  let filtDay=0;
+  if(ptFil.date){
+    const parts=ptFil.date.split('-');
+    if(parts.length===3&&parseInt(parts[1])===m&&parseInt(parts[0])===y){
+      filtDay=parseInt(parts[2]);
+    }
+  }
+  /* Colonnes à afficher */
+  const dArr=filtDay>0?[filtDay]:Array.from({length:days},(_,i)=>i+1);
+
+  const leg=PT_TYPES.map(t=>`<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${t.col}18;color:${t.col};margin:2px"><span style="font-weight:800">${t.k}</span> = ${t.l}${t.abs?`<span style="font-size:9px;background:rgba(239,68,68,.2);color:#dc2626;padding:1px 5px;border-radius:10px;margin-left:3px">≡ abs.</span>`:''}</span>`).join('');
+
+  /* Barre mode modification */
+  const editBar=ptEditMode
+    ?`<div style="padding:8px 14px;border-bottom:1px solid var(--border);background:rgba(16,185,129,.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:#059669"><i class="fa fa-pencil"></i> ${FR?'Mode modification activé — cliquez une cellule':'Edit mode ON — click a cell'}</div>
+        <button class="btn bd bsm" onclick="ptEditMode=false;render('pointage')"><i class="fa fa-lock"></i> ${FR?'Verrouiller':'Lock'}</button>
+      </div>`
+    :`<div style="padding:8px 14px;border-bottom:1px solid var(--border);background:rgba(239,68,68,.05);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)"><i class="fa fa-lock" style="color:#ef4444"></i> ${FR?'Modifications verrouillées':'Edits locked'}</div>
+        <button class="btn bp bsm" onclick="askEditUnlock()"><i class="fa fa-lock-open"></i> ${FR?'Déverrouiller':'Unlock'}</button>
+      </div>`;
+
+  /* Info filtre date actif */
+  const dateInfo=filtDay>0
+    ?`<div style="padding:6px 14px;border-bottom:1px solid var(--border);background:var(--primary)08;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:12px;font-weight:700;color:var(--primary)"><i class="fa fa-calendar-day"></i> ${FR?'Vue du jour :':'Day view:'} <b>${filtDay}/${pad(m)}/${y}</b> — ${T('days')[dow(filtDay,m,y)]}</span>
+        <button class="btn bg2 bsm" onclick="ptFil.date='';render('pointage')"><i class="fa fa-xmark"></i> ${FR?'Tout le mois':'Full month'}</button>
+      </div>`
+    :'';
+
+  /* Calcul totaux pour le filtre courant */
+  function calcPTFiltered(e){
+    const c={};PT_TYPES.forEach(t=>c[t.k]=0);
+    dArr.forEach(d=>{
+      /* Si shift filtré : ne compter que les jours avec ce shift */
+      if(ptFil.shift&&shiftData[e.mat+'-'+y+'-'+m+'-'+d]!==ptFil.shift) return;
+      const v=ptd[e.mat+'-'+y+'-'+m+'-'+d];
+      if(v&&c[v]!==undefined)c[v]++;
+    });
+    c._abs=PT_TYPES.filter(t=>t.abs).reduce((s,t)=>s+c[t.k],0);
+    c._pres=c['P']||0;
+    return c;
+  }
+
+  return`
+  <div class="card" style="overflow:hidden">
+    <div class="tabb">
+      <button class="tabbt active" id="ptab-pt" onclick="swPT('pt')">${FR?'Pointage':'Attendance'}</button>
+      <button class="tabbt" id="ptab-synth" onclick="swPT('synth')">${FR?'Synthèse 1':'Summary 1'}</button>
+      <button class="tabbt" id="ptab-synth2" onclick="swPT('synth2')">${FR?'Synthèse 2':'Summary 2'}</button>
+    </div>
+    <div id="pt-pointage">
+    <div class="toolbar">
+      <div class="sbox" style="min-width:130px"><i class="fa fa-search"></i><input type="text" placeholder="${T('searchEmp')}" value="${ptQ}" oninput="ptQ=this.value;render('pointage')"></div>
+      <!-- Filtre date -->
+      <input type="date" class="fc" id="ptDate" style="width:auto;padding:7px 9px"
+        value="${ptFil.date}" onchange="ptFil.date=this.value;render('pointage')"
+        title="${FR?'Filtrer par date':'Filter by date'}">
+      <select class="fc" style="width:auto;padding:7px 9px" onchange="ptFil.svc=this.value;render('pointage')">
+        <option value="">${T('allSvc')}</option>${SERVICES.map(s=>`<option value="${s}"${ptFil.svc===s?' selected':''}>${s}</option>`).join('')}
+      </select>
+      <select class="fc" style="width:auto;padding:7px 9px" onchange="ptFil.eq=this.value;render('pointage')">
+        <option value="">${T('allTeams')}</option>${EQUIPES.map(q=>`<option value="${q}"${ptFil.eq===q?' selected':''}>Éq.${q}</option>`).join('')}
+      </select>
+      <select class="fc" style="width:auto;padding:7px 9px" onchange="ptFil.shift=this.value;render('pointage')">
+        <option value="">${FR?'Tous shifts':'All shifts'}</option>
+        ${cfg.shifts.map(s=>`<option value="${s.n}"${ptFil.shift===s.n?' selected':''}>${s.n} (${s.s}–${s.e})</option>`).join('')}
+      </select>
+      <!-- Réinitialiser filtres -->
+      <button class="btn bg2 bsm" onclick="ptFil={svc:'',eq:'',shift:'',date:''};ptQ='';render('pointage')" title="${FR?'Réinitialiser':'Reset'}"><i class="fa fa-xmark"></i></button>
+      <button class="btn bp bsm" onclick="massPT()"><i class="fa fa-wand-magic-sparkles"></i> ${T('grouped')}</button>
+      <button class="btn bo bsm" onclick="expPT()"><i class="fa fa-file-excel"></i></button>
+    </div>
+
+    ${editBar}
+    ${dateInfo}
+
+    <div style="padding:8px 14px;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:2px;align-items:center">
+      <span style="font-weight:700;color:var(--text2);font-size:12px;margin-right:4px">${T('legend')}</span>${leg}
+    </div>
+
+    <div class="ptc">
+      <table class="ptt" style="min-width:${260+dArr.length*54}px">
+        <thead><tr>
+          <th class="cf" style="min-width:26px">#</th>
+          <th class="cf" style="min-width:72px;left:26px">${T('col_mat')}</th>
+          <th style="min-width:65px">${T('col_svc2')}</th>
+          <th style="min-width:130px">${T('col_nameP')}</th>
+          <th style="min-width:34px">${T('col_eq2')}</th>
+          <th class="cf" style="min-width:90px;left:98px">${T('col_fct2')}</th>
+          ${dArr.map(d=>{
+            const dw=dow(d,m,y),sun=dw===0,sat=dw===6,fer=isFer(d,m,y),lck=isLocked(d,m,y);
+            const bg=fer?'background:rgba(139,92,246,.1)':sun?'background:rgba(239,68,68,.06)':sat?'background:rgba(249,115,22,.05)':'';
+            return`<th style="${bg};min-width:52px;text-align:center">
+              <div class="dh">
+                <span class="dn">${d}</span>
+                <span class="dd" style="${sun?'color:#ef4444':sat?'color:#f97316':''}">${T('days')[dw]}</span>
+                <button class="day-lock-btn ${lck?'locked':'unlocked'}" onclick="toggleLock(${d},${m},${y})" title="${lck?T('unlockBtn'):'Lock'}">
+                  <i class="fa ${lck?'fa-lock':'fa-lock-open'}"></i>
+                </button>
+              </div>
+            </th>`;
+          }).join('')}
+          <th style="min-width:38px">P</th>
+          ${PT_TYPES.filter(t=>t.abs).map(t=>`<th style="min-width:38px;color:${t.col}" title="${t.l}">${t.k}</th>`).join('')}
+          <th style="min-width:44px;color:#ef4444">${T('col_absT')}</th>
+        </tr></thead>
+        <tbody>${list.map((e,ri)=>{
+          const ct=calcPTFiltered(e);
+          const cells=dArr.map(d=>{
+            const dw=dow(d,m,y),sun=dw===0,sat=dw===6,fer=isFer(d,m,y),lck=isLocked(d,m,y);
+            const key=e.mat+'-'+y+'-'+m+'-'+d;
+            const val=ptd[key]||(sun||sat?'R':'');
+            const tp=getPT(val);
+            const bg=fer?'rgba(139,92,246,.04)':sun?'rgba(239,68,68,.03)':sat?'rgba(249,115,22,.02)':'';
+
+            /* Si filtre shift actif et ce jour n'est pas ce shift → cellule grisée */
+            const dayShift=shiftData[key]||'';
+            const shiftMismatch=ptFil.shift&&dayShift!==ptFil.shift;
+            if(shiftMismatch){
+              return`<td style="padding:2px;background:var(--border)10">
+                <div class="ptcell" style="background:var(--border)30;color:var(--border);cursor:default" title="${FR?'Autre shift':'Other shift'}">·</div></td>`;
+            }
+
+            let clickAction,cursor,cellStyle;
+            if(lck){
+              clickAction='askUnlock('+d+','+m+','+y+')';
+              cursor='cursor:not-allowed';
+              cellStyle=tp?'background:'+tp.col+'20;color:'+tp.col+';opacity:.6':'color:var(--border);opacity:.6';
+            } else if(ptEditMode){
+              clickAction='openCellEdit(\''+e.mat+'\','+y+','+m+','+d+')';
+              cursor='cursor:pointer';
+              cellStyle=tp?'background:'+tp.col+'20;color:'+tp.col+';outline:1.5px dashed '+tp.col+'40':'color:var(--border);outline:1.5px dashed var(--border)';
+            } else {
+              clickAction='notifyEditLocked()';
+              cursor='cursor:default';
+              cellStyle=tp?'background:'+tp.col+'20;color:'+tp.col:'color:var(--border)';
+            }
+            return`<td style="${bg?'background:'+bg:''};padding:2px">
+              <div class="ptcell" onclick="${clickAction}" title="${tp?tp.l:lck?'🔒':'—'}" style="${cellStyle};${cursor}">
+                ${val||'·'}
+              </div></td>`;
+          }).join('');
+          const absCells=PT_TYPES.filter(t=>t.abs).map(t=>`<td style="text-align:center;font-weight:700;color:${(ct[t.k]||0)>0?t.col:'var(--text3)'}">${ct[t.k]||0}</td>`).join('');
+          return`<tr>
+            <td class="cf" style="font-weight:700;color:var(--text2)">${ri+1}</td>
+            <td class="cf" style="left:26px"><span class="tag tbl2" style="font-size:10px">${e.mat}</span></td>
+            <td style="font-size:11px">${e.svc}</td>
+            <td><b>${e.nom}</b> ${e.pre}</td>
+            <td style="text-align:center;font-weight:700">${e.eq}</td>
+            <td class="cf" style="left:98px;font-size:11px">${e.fct}</td>
+            ${cells}
+            <td style="text-align:center;font-weight:800;color:#10b981">${ct._pres}</td>
+            ${absCells}
+            <td style="text-align:center;font-weight:800;color:#ef4444">${ct._abs}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>
+  </div>
+    </div><!-- fin pt-pointage -->
+    <div id="pt-synth" class="hidden">${rSynth()}</div>
+    <div id="pt-synth2" class="hidden"></div>
+  </div>`;
+}
+
+/* Demander le mot de passe pour activer le mode édition individuelle */
+function askEditUnlock(){
+  document.getElementById('mTit').textContent = lang==='fr'?'🔓 Déverrouiller les modifications':'🔓 Unlock individual edits';
+  document.getElementById('modal').className='modal';
+  document.getElementById('mBod').innerHTML=`
+    <p class="sm cm mb3">${lang==='fr'?'Saisissez le mot de passe pour autoriser la modification individuelle des pointages.':'Enter the password to allow individual attendance edits.'}</p>
+    <div class="fg"><label class="fl">${T('lbl_curPwd')}</label>
+      <input type="password" class="fc" id="editPwd" placeholder="••••" onkeydown="if(event.key==='Enter')doEditUnlock()">
+    </div>
+    <div id="editErr" style="color:#ef4444;font-size:12px;display:none"><i class="fa fa-circle-xmark"></i> ${T('wrongPwd')}</div>`;
+  document.getElementById('mFtr').innerHTML=`
+    <button class="btn bg2" onclick="closeM()">${T('cancel')}</button>
+    <button class="btn bp" onclick="doEditUnlock()"><i class="fa fa-lock-open"></i> ${lang==='fr'?'Activer la modification':'Activate edits'}</button>`;
+  openM();
+  setTimeout(()=>document.getElementById('editPwd')?.focus(),100);
+}
+
+function doEditUnlock(){
+  if(document.getElementById('editPwd')?.value!==cfg.pwd){
+    const e=document.getElementById('editErr');
+    if(e){e.style.display='block';setTimeout(()=>e.style.display='none',2000);}
+    return;
+  }
+  ptEditMode=true;
+  closeM();
+  render('pointage');
+  toast(lang==='fr'?'Mode modification individuelle activé ✓':'Individual edit mode activated ✓','success');
+}
+
+/* Ouvrir sélecteur de statut pour une cellule individuelle */
+function openCellEdit(mat,y,m,d){
+  const key=mat+'-'+y+'-'+m+'-'+d;
+  const curr=ptd[key]||'';
+  const emp=employees.find(e=>e.mat===mat);
+  const FR=lang==='fr';
+  const shiftVal=shiftData[key]||'';
+  const currTP=getPT(curr);
+  const shiftDiv=shiftVal?'<div style="font-size:10px;font-weight:700;color:var(--primary);margin-top:2px">Shift: '+shiftVal+'</div>':'';
+  const currDiv=curr?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--primary)15;font-size:12px;color:var(--text2)">'+(FR?'Statut actuel :':'Current status:')+' <span style="font-weight:700;color:'+(currTP?.col||'var(--text)')+'">'+curr+' — '+(currTP?.l||'—')+'</span></div>':'';
+  document.getElementById('mTit').textContent=FR?'Modifier le pointage':'Edit Attendance';
+  document.getElementById('modal').className='modal';
+  document.getElementById('mBod').innerHTML=`
+    <div style="background:var(--primary)08;border:1px solid var(--primary)20;border-radius:10px;padding:12px 16px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0">
+          ${emp?.nom?.charAt(0)||'?'}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:15px;color:var(--text)">${emp?.nom||'—'} ${emp?.pre||''}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--primary)15;color:var(--primary)">${emp?.mat||mat}</span>
+            <span style="font-size:11px;color:var(--text2)">${emp?.svc||'—'}</span>
+            <span style="font-size:11px;color:var(--text2)">${emp?.fct||'—'}</span>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:var(--fh);font-weight:800;font-size:14px;color:var(--primary)">${d}/${pad(m)}/${y}</div>
+          <div style="font-size:11px;color:var(--text2)">${T('days')[new Date(y,m-1,d).getDay()]}</div>
+          ${shiftDiv}
+        </div>
+      </div>
+      ${currDiv}
+    </div>
+    <p style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">${FR?'Choisissez le nouveau statut :':'Choose the new status:'}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${PT_TYPES.map(t=>`
+      <div onclick="setCellPT('${mat}',${y},${m},${d},'${t.k}')"
+        style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:2px solid ${curr===t.k?t.col:'var(--border)'};background:${curr===t.k?t.col+'18':'var(--surface2)'};cursor:pointer;transition:.15s">
+        <div style="width:12px;height:12px;border-radius:4px;background:${t.col};flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:13px;color:${t.col}">${t.k}</div>
+          <div style="font-size:10px;color:var(--text2)">${t.l}${t.abs?' <span style="color:#dc2626">≡</span>':''}</div>
+        </div>
+        ${curr===t.k?'<i class="fa fa-check-circle" style="color:'+t.col+';flex-shrink:0"></i>':''}
+      </div>`).join('')}
+      <div onclick="setCellPT('${mat}',${y},${m},${d},'')"
+        style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:2px solid ${curr===''?'#ef4444':'var(--border)'};background:${curr===''?'rgba(239,68,68,.08)':'var(--surface2)'};cursor:pointer;transition:.15s">
+        <div style="width:12px;height:12px;border-radius:4px;background:var(--border);flex-shrink:0"></div>
+        <div>
+          <div style="font-weight:800;font-size:13px;color:var(--text2)">—</div>
+          <div style="font-size:10px;color:var(--text2)">${FR?'Effacer':'Clear'}</div>
+        </div>
+        ${curr===''?'<i class="fa fa-check-circle" style="color:#ef4444;flex-shrink:0"></i>':''}
+      </div>
+    </div>`;
+  document.getElementById('mFtr').innerHTML=`<button class="btn bg2" onclick="closeM()">${T('cancel')}</button>`;
+  openM();
+}
+
+function setCellPT(mat,y,m,d,val){
+  const key=`${mat}-${y}-${m}-${d}`;
+  if(val==='')delete ptd[key];else ptd[key]=val;
+  closeM();
+  render('pointage');
+  const tp=getPT(val);
+  toast(lang==='fr'?`Pointage mis à jour : ${val||'—'} ${tp?'('+tp.l+')':''}`:`Attendance updated: ${val||'—'} ${tp?'('+tp.l+')':''}`, 'success');
+}
+
+function notifyEditLocked(){
+  toast(lang==='fr'?'Déverrouillez les modifications en haut pour éditer une cellule':'Unlock edits above to modify a cell','info');
+}
+
+function toggleLock(d,m,y){
+  const key=`${y}-${pad(m)}-${pad(d)}`;
+  if(lockedDays[key])askUnlock(d,m,y);
+  else{lockedDays[key]=true;toast(`${d}/${pad(m)}/${y} ${T('msg_locked2')}`,'info');render('pointage');}
+}
+function askUnlock(d,m,y){
+  document.getElementById('mTit').textContent=T('unlockTitle');
+  document.getElementById('modal').className='modal';
+  document.getElementById('mBod').innerHTML=`
+    <p class="sm cm mb3">${T('unlockDesc')} <b>${d}/${pad(m)}/${y}</b>.</p>
+    <div class="fg"><label class="fl">${T('lbl_curPwd')}</label>
+      <input type="password" class="fc" id="ulPwd" placeholder="••••" onkeydown="if(event.key==='Enter')doUnlock(${d},${m},${y})">
+    </div>
+    <div id="ulErr" style="color:#ef4444;font-size:12px;display:none"><i class="fa fa-circle-xmark"></i> ${T('wrongPwd')}</div>`;
+  document.getElementById('mFtr').innerHTML=`<button class="btn bg2" onclick="closeM()">${T('cancel')}</button><button class="btn bp" onclick="doUnlock(${d},${m},${y})"><i class="fa fa-lock-open"></i> ${T('unlockBtn')}</button>`;
+  openM();setTimeout(()=>document.getElementById('ulPwd')?.focus(),100);
+}
+function doUnlock(d,m,y){
+  if(document.getElementById('ulPwd')?.value!==cfg.pwd){const e=document.getElementById('ulErr');if(e){e.style.display='block';setTimeout(()=>e.style.display='none',2000);}return;}
+  delete lockedDays[`${y}-${pad(m)}-${pad(d)}`];
+  closeM();toast(`${d}/${pad(m)}/${y} ${T('msg_unlocked')}`,'success');render('pointage');
+}
+function cyclePT(mat,y,m,d){
+  const key=`${mat}-${y}-${m}-${d}`;
+  const order=ptKeys().concat(['']);const curr=ptd[key]||'';
+  const next=order[(order.indexOf(curr)+1)%order.length];
+  if(next==='')delete ptd[key];else ptd[key]=next;
+  render('pointage');
+}
+function swPT(tab){
+  ['pt-pointage','pt-synth','pt-synth2'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.classList.toggle('hidden',id!=='pt-'+tab&&!(id==='pt-pointage'&&tab==='pt'));
+  });
+  /* Cas spécial : pt-pointage visible seulement si tab==='pt' */
+  const pp=document.getElementById('pt-pointage');if(pp)pp.classList.toggle('hidden',tab!=='pt');
+  const ps=document.getElementById('pt-synth');if(ps)ps.classList.toggle('hidden',tab!=='synth');
+  const ps2=document.getElementById('pt-synth2');if(ps2)ps2.classList.toggle('hidden',tab!=='synth2');
+  ['ptab-pt','ptab-synth','ptab-synth2'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='ptab-'+tab);
+  });
+  if(tab==='synth'){
+    const el=document.getElementById('pt-synth');
+    if(el&&!el.innerHTML.trim())el.innerHTML=rSynth();
+  }
+  if(tab==='synth2'){
+    const el=document.getElementById('pt-synth2');
+    if(el)el.innerHTML=rSynth2();
+  }
+}
+
+/* ═══════════════════════════════════
+   SYNTHÈSE POINTAGE — 2 vues + exports
+═══════════════════════════════════ */
+function rSynth(){
+  const now=new Date();
+  const todayStr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  const FR=lang==='fr';
+
+  const filtersHtml=`
+  <div class="card" style="overflow:hidden;margin-bottom:14px">
+    <div class="ch">
+      <div class="ct"><i class="fa fa-filter cp"></i> ${FR?'Filtres':'Filters'}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn bp bsm" onclick="expSynthPTPDF()"><i class="fa fa-file-pdf"></i> PDF</button>
+        <button class="btn bs bsm" onclick="expSynthPTExcel()"><i class="fa fa-file-excel"></i> Excel</button>
+      </div>
+    </div>
+    <div class="cb" style="padding:12px 18px">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Mode':'Mode'}</label>
+          <select class="fc" id="syn_mode" style="width:auto;padding:7px 10px" onchange="updateSynth()">
+            <option value="day">${FR?'Jour J':'Day'}</option>
+            <option value="month">${FR?'Mois':'Month'}</option>
+            <option value="year">${FR?'Année':'Year'}</option>
+          </select>
+        </div>
+        <div id="syn_date_wrap">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Date':'Date'}</label>
+          <input type="date" class="fc" id="syn_date" value="${todayStr}" style="width:auto;padding:7px 10px" onchange="updateSynth()">
+        </div>
+        <div id="syn_month_wrap" class="hidden">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Mois':'Month'}</label>
+          <select class="fc" id="syn_month" style="width:auto;padding:7px 10px" onchange="updateSynth()">
+            ${T('months').map((mn,i)=>`<option value="${i+1}"${i+1===now.getMonth()+1?' selected':''}>${mn}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Année':'Year'}</label>
+          <select class="fc" id="syn_year" style="width:auto;padding:7px 10px" onchange="updateSynth()">
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">Shift</label>
+          <select class="fc" id="syn_shift" style="width:auto;padding:7px 10px" onchange="updateSynth()">
+            <option value="">${FR?'Tous shifts':'All shifts'}</option>
+            ${cfg.shifts.map(s=>`<option value="${s.n}">${s.n} (${s.s}–${s.e})</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Équipe':'Team'}</label>
+          <select class="fc" id="syn_eq" style="width:auto;padding:7px 10px" onchange="updateSynth()">
+            <option value="">${T('allTeams')}</option>
+            ${EQUIPES.map(q=>`<option value="${q}">Éq.${q}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Département':'Dept.'}</label>
+          <select class="fc" id="syn_svc" style="width:auto;padding:7px 10px" onchange="updateSynth()">
+            <option value="">${T('allSvc')}</option>
+            ${SERVICES.map(s=>`<option>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  return filtersHtml+`
+  <div id="synthResult">${calcSynth('day',todayStr,now.getMonth()+1,now.getFullYear(),'','','')}</div>`;
+}
+
+function getSynthParams(){
+  return{
+    mode:document.getElementById('syn_mode')?.value||'day',
+    date:document.getElementById('syn_date')?.value||'',
+    month:parseInt(document.getElementById('syn_month')?.value||new Date().getMonth()+1),
+    year:parseInt(document.getElementById('syn_year')?.value||new Date().getFullYear()),
+    shift:document.getElementById('syn_shift')?.value||'',
+    eq:document.getElementById('syn_eq')?.value||'',
+    svc:document.getElementById('syn_svc')?.value||''
+  };
+}
+
+function updateSynth(){
+  const p=getSynthParams();
+  const dw=document.getElementById('syn_date_wrap');
+  const mw=document.getElementById('syn_month_wrap');
+  if(dw)dw.classList.toggle('hidden',p.mode!=='day');
+  if(mw)mw.classList.toggle('hidden',p.mode==='year');
+  const res=document.getElementById('synthResult');
+  if(res)res.innerHTML=calcSynth(p.mode,p.date,p.month,p.year,p.shift,p.eq,p.svc);
+}
+
+/* Construire les paires (employé, clé) filtrées */
+function buildPTKeys(mode,date,month,year,shift,eq,svc){
+  let emps=actifs();
+  if(svc)emps=emps.filter(e=>e.svc===svc);
+  if(eq)emps=emps.filter(e=>e.eq===eq);
+  let pairs=[];
+  if(mode==='day'&&date){
+    const pts=date.split('-').map(Number);
+    emps.forEach(e=>pairs.push({e,key:e.mat+'-'+pts[0]+'-'+pts[1]+'-'+pts[2]}));
+  } else if(mode==='month'){
+    const days=dim(month,year);
+    for(let d=1;d<=days;d++) emps.forEach(e=>pairs.push({e,key:e.mat+'-'+year+'-'+month+'-'+d}));
+  } else {
+    for(let mo=1;mo<=12;mo++){const days=dim(mo,year);for(let d=1;d<=days;d++) emps.forEach(e=>pairs.push({e,key:e.mat+'-'+year+'-'+mo+'-'+d}));}
+  }
+  if(shift)pairs=pairs.filter(p=>shiftData[p.key]===shift);
+  return{emps,pairs};
+}
+
+function calcSynth(mode,date,month,year,shift,eq,svc){
+  const FR=lang==='fr';
+  const {emps,pairs}=buildPTKeys(mode,date,month,year,shift,eq,svc);
+  const totalEmps=emps.length;
+  if(!totalEmps) return`<div style="padding:40px;text-align:center;color:var(--text3)">${FR?'Aucune donnée':'No data'}</div>`;
+
+  /* Titre */
+  let periodLabel=mode==='day'?date:mode==='month'?T('months')[month-1]+' '+year:''+year;
+  const shiftLabel=shift?' | Shift: '+shift:'';
+  const eqLabel=eq?' | Éq.'+eq:'';
+  const svcLabel=svc?' | '+svc:'';
+  const titleFull=(FR?'Récapitulatif des pointages du ':'Attendance summary — ')+periodLabel+shiftLabel+eqLabel+svcLabel;
+
+  /* ── SYNTHÈSE 1 : par type de pointage ── */
+  const isDay=mode==='day';
+  const counts={};PT_TYPES.forEach(t=>counts[t.k]={emps:new Set(),total:0});
+  counts['none']={emps:new Set(),total:0};
+  pairs.forEach(({e,key})=>{
+    const v=ptd[key];
+    if(v&&counts[v]){counts[v].emps.add(e.mat);counts[v].total++;}
+    else if(!v){counts['none'].emps.add(e.mat);counts['none'].total++;}
+  });
+
+  const synth1Rows=PT_TYPES.map(t=>{
+    const c=counts[t.k];
+    const n=isDay?c.emps.size:c.total;
+    const pct=totalEmps>0&&n>0?Math.round(n/totalEmps*100):0;
+    return{k:t.k,l:t.l,col:t.col,abs:t.abs,n,pct};
+  });
+  const nonPt=isDay?counts['none'].emps.size:counts['none'].total;
+  const grandT1=synth1Rows.reduce((s,r)=>s+r.n,0);
+
+  const syn1Html=`
+  <div class="card" id="synthPT1" style="overflow:hidden;margin-bottom:14px">
+    <div style="padding:14px 18px;background:var(--primary);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-family:var(--fh);font-weight:800;font-size:14px;color:#fff">${titleFull}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:3px">${FR?'Synthèse par type de pointage':'Summary by attendance type'} — ${totalEmps} ${FR?'employés':'employees'}</div>
+      </div>
+    </div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:var(--surface2)">
+        <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border)">${FR?'Type':'Type'}</th>
+        <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border)">${FR?'Libellé':'Label'}</th>
+        <th style="padding:9px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border)">${FR?'Nombre':'Count'}</th>
+        <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border)">${FR?'Proportion':'Rate'}</th>
+        <th style="padding:9px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border)">${FR?'Absence':'Absence'}</th>
+      </tr></thead>
+      <tbody>
+        ${synth1Rows.map((r,i)=>`<tr style="border-bottom:1px solid var(--border);${i%2?'background:var(--surface2)':''}">
+          <td style="padding:9px 14px"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:4px;background:${r.col};display:inline-block"></span><span style="font-weight:800;font-size:14px;color:${r.col}">${r.k}</span></span></td>
+          <td style="padding:9px 14px;font-size:13px">${r.l}</td>
+          <td style="padding:9px 14px;text-align:center;font-weight:800;font-size:18px;color:${r.n>0?r.col:'var(--text3)'}">${r.n}</td>
+          <td style="padding:9px 14px"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;background:var(--border);border-radius:20px;overflow:hidden;min-width:80px"><div style="height:100%;border-radius:20px;background:${r.col};width:${r.pct}%"></div></div><span style="font-size:12px;font-weight:700;color:${r.col};min-width:32px">${r.pct}%</span></div></td>
+          <td style="padding:9px 14px;text-align:center">${r.abs?`<span style="background:rgba(239,68,68,.12);color:#dc2626;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700">≡ ${FR?'Oui':'Yes'}</span>`:`<span style="background:rgba(100,116,139,.1);color:#64748b;padding:3px 10px;border-radius:20px;font-size:11px">${FR?'Non':'No'}</span>`}</td>
+        </tr>`).join('')}
+        <tr style="background:rgba(100,116,139,.04);border-bottom:1px solid var(--border)">
+          <td style="padding:9px 14px"><span style="font-weight:800;font-size:14px;color:var(--text3)">—</span></td>
+          <td style="padding:9px 14px;font-size:13px;color:var(--text2)">${FR?'Non pointé':'Not recorded'}</td>
+          <td style="padding:9px 14px;text-align:center;font-weight:800;font-size:18px;color:${nonPt>0?'var(--warning)':'var(--text3)'}">${nonPt}</td>
+          <td style="padding:9px 14px"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;background:var(--border);border-radius:20px;overflow:hidden;min-width:80px"><div style="height:100%;border-radius:20px;background:var(--warning);width:${totalEmps>0?Math.round(nonPt/totalEmps*100):0}%"></div></div><span style="font-size:12px;font-weight:700;color:var(--warning)">${totalEmps>0?Math.round(nonPt/totalEmps*100):0}%</span></div></td>
+          <td style="padding:9px 14px;text-align:center"><span style="color:var(--text3);font-size:11px">—</span></td>
+        </tr>
+      </tbody>
+      <tfoot><tr style="background:var(--surface2);border-top:2px solid var(--border)">
+        <td colspan="2" style="padding:10px 14px;font-weight:800;font-size:13px;color:var(--primary)">${FR?'TOTAL CUMULÉ':'CUMULATIVE TOTAL'}</td>
+        <td style="padding:10px 14px;text-align:center;font-weight:800;font-size:18px;color:var(--primary)">${grandT1}</td>
+        <td style="padding:10px 14px"><span style="font-size:12px;font-weight:700;color:var(--primary)">100%</span></td>
+        <td></td>
+      </tr></tfoot>
+    </table></div>
+  </div>`;
+
+  return syn1Html;
+}
+
+/* ── SYNTHÈSE 2 : page dédiée Département × Fonction × Types ── */
+function rSynth2(){
+  const now=new Date();
+  const todayStr=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  const FR=lang==='fr';
+  return`
+  <div class="card" style="overflow:hidden;margin-bottom:14px">
+    <div class="ch">
+      <div class="ct"><i class="fa fa-filter cp"></i> ${FR?'Filtres Synthèse 2':'Summary 2 Filters'}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn bp bsm" onclick="expSynth2PDF()"><i class="fa fa-file-pdf"></i> PDF</button>
+        <button class="btn bs bsm" onclick="expSynth2Excel()"><i class="fa fa-file-excel"></i> Excel</button>
+      </div>
+    </div>
+    <div class="cb" style="padding:12px 18px">
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Mode':'Mode'}</label>
+          <select class="fc" id="s2_mode" style="width:auto;padding:7px 10px" onchange="updateSynth2()">
+            <option value="day">${FR?'Jour J':'Day'}</option>
+            <option value="month">${FR?'Mois':'Month'}</option>
+            <option value="year">${FR?'Année':'Year'}</option>
+          </select>
+        </div>
+        <div id="s2_date_w">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Date':'Date'}</label>
+          <input type="date" class="fc" id="s2_date" value="${todayStr}" style="width:auto;padding:7px 10px" onchange="updateSynth2()">
+        </div>
+        <div id="s2_month_w" class="hidden">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Mois':'Month'}</label>
+          <select class="fc" id="s2_month" style="width:auto;padding:7px 10px" onchange="updateSynth2()">
+            ${T('months').map((mn,i)=>`<option value="${i+1}"${i+1===now.getMonth()+1?' selected':''}>${mn}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Année':'Year'}</label>
+          <select class="fc" id="s2_year" style="width:auto;padding:7px 10px" onchange="updateSynth2()">
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">Shift</label>
+          <select class="fc" id="s2_shift" style="width:auto;padding:7px 10px" onchange="updateSynth2()">
+            <option value="">${FR?'Tous shifts':'All shifts'}</option>
+            ${cfg.shifts.map(s=>`<option value="${s.n}">${s.n} (${s.s}–${s.e})</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Équipe':'Team'}</label>
+          <select class="fc" id="s2_eq" style="width:auto;padding:7px 10px" onchange="updateSynth2()">
+            <option value="">${T('allTeams')}</option>
+            ${EQUIPES.map(q=>`<option value="${q}">Éq.${q}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Département':'Dept.'}</label>
+          <select class="fc" id="s2_svc" style="width:auto;padding:7px 10px" onchange="updateSynth2()">
+            <option value="">${T('allSvc')}</option>
+            ${SERVICES.map(s=>`<option>${s}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="synth2Result">${calcSynth2('day',todayStr,now.getMonth()+1,now.getFullYear(),'','','')}</div>`;
+}
+
+function getSynth2Params(){
+  return{
+    mode:document.getElementById('s2_mode')?.value||'day',
+    date:document.getElementById('s2_date')?.value||'',
+    month:parseInt(document.getElementById('s2_month')?.value||new Date().getMonth()+1),
+    year:parseInt(document.getElementById('s2_year')?.value||new Date().getFullYear()),
+    shift:document.getElementById('s2_shift')?.value||'',
+    eq:document.getElementById('s2_eq')?.value||'',
+    svc:document.getElementById('s2_svc')?.value||''
+  };
+}
+
+function updateSynth2(){
+  const p=getSynth2Params();
+  const dw=document.getElementById('s2_date_w');
+  const mw=document.getElementById('s2_month_w');
+  if(dw)dw.classList.toggle('hidden',p.mode!=='day');
+  if(mw)mw.classList.toggle('hidden',p.mode==='year');
+  const res=document.getElementById('synth2Result');
+  if(res)res.innerHTML=calcSynth2(p.mode,p.date,p.month,p.year,p.shift,p.eq,p.svc);
+}
+
+function calcSynth2(mode,date,month,year,shift,eq,svc){
+  const FR=lang==='fr';
+  const {emps,pairs}=buildPTKeys(mode,date,month,year,shift,eq,svc);
+  const totalEmps=emps.length;
+  if(!totalEmps) return`<div style="padding:40px;text-align:center;color:var(--text3)">${FR?'Aucune donnée':'No data'}</div>`;
+
+  let periodLabel=mode==='day'?date:mode==='month'?T('months')[month-1]+' '+year:''+year;
+  const shiftLabel=shift?' | Shift: '+shift:'';
+  const eqLabel=eq?' | Éq.'+eq:'';
+  const svcLabel=svc?' | '+svc:'';
+  const titleFull=(FR?'Synthèse 2 — Pointages du ':'Summary 2 — ')+periodLabel+shiftLabel+eqLabel+svcLabel;
+
+  /* Données par employé */
+  const empData={};
+  emps.forEach(e=>{empData[e.mat]={e,svc:e.svc,fct:e.fct};PT_TYPES.forEach(t=>empData[e.mat][t.k]=0);});
+  pairs.forEach(({e,key})=>{const v=ptd[key];if(v&&empData[e.mat]&&empData[e.mat][v]!==undefined)empData[e.mat][v]++;});
+  const svcs2=svc?[svc]:SERVICES.filter(s=>emps.some(e=>e.svc===s));
+  const allList=Object.values(empData);
+
+  /* Totaux globaux par type */
+  const globalTotals={};PT_TYPES.forEach(t=>globalTotals[t.k]=0);
+  pairs.forEach(({key})=>{const v=ptd[key];if(v&&globalTotals[v]!==undefined)globalTotals[v]++;});
+  const grandTotalAll=PT_TYPES.reduce((s,t)=>s+globalTotals[t.k],0);
+
+
+  /* Tableau unique lignes=départements colonnes=types */
+  const deptRows=svcs2.map((dept,i)=>{
+    const dl=allList.filter(r=>r.svc===dept);
+    if(!dl.length)return'';
+    const eff=dl.length;
+    const dTot={};PT_TYPES.forEach(t=>{dTot[t.k]=dl.reduce((s,r)=>s+(r[t.k]||0),0);});
+    const rowTotal=PT_TYPES.reduce((s,t)=>s+dTot[t.k],0);
+    return`<tr style="border-bottom:1px solid var(--border);${i%2?'background:var(--surface2)':''}">
+      <td style="padding:9px 12px;font-weight:700;font-size:13px;position:sticky;left:0;background:${i%2?'var(--surface2)':'var(--surface)'}">${dept}</td>
+      <td style="padding:9px 8px;text-align:center;font-weight:700;color:var(--text2)">${eff}</td>
+      ${PT_TYPES.map(t=>{const v=dTot[t.k];const tx=eff>0&&v>0?Math.round(v/eff*100):0;
+        return v>0
+          ?`<td style="padding:6px 8px;text-align:center"><div style="font-weight:800;font-size:15px;color:${t.col}">${v}</div><div style="font-size:9px;color:${t.col};opacity:.8">(${tx}%)</div></td>`
+          :`<td style="padding:6px 8px;text-align:center;color:var(--text3)">—</td>`;
+      }).join('')}
+      <td style="padding:9px 8px;text-align:center;background:var(--primary)05;border-left:1px solid var(--primary)20">
+        <div style="font-weight:800;font-size:15px;color:${rowTotal>0?'var(--primary)':'var(--text3)'}">${rowTotal||'—'}</div>
+        ${rowTotal>0?`<div style="font-size:9px;color:var(--primary);opacity:.7">(${Math.round(rowTotal/eff*100)}%)</div>`:''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  const cumulCells=PT_TYPES.map(t=>{const v=globalTotals[t.k];const tx=totalEmps>0&&v>0?Math.round(v/totalEmps*100):0;
+    return v>0
+      ?`<td style="padding:10px 8px;text-align:center;background:${t.col}08"><div style="font-weight:800;font-size:16px;color:${t.col}">${v}</div><div style="font-size:9px;font-weight:700;color:${t.col}">${tx}%</div></td>`
+      :`<td style="padding:10px 8px;text-align:center;color:var(--text3)">—</td>`;
+  }).join('');
+
+  const tableHtml=`<div style="overflow-x:auto">
+    <table class="s2-main-tbl" style="width:100%;border-collapse:collapse;min-width:${200+PT_TYPES.length*90}px">
+      <thead><tr>
+        <th style="padding:9px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);background:var(--surface2);border-bottom:2px solid var(--border);min-width:150px;position:sticky;left:0;z-index:2">${FR?'Département':'Department'}</th>
+        <th style="padding:9px 8px;text-align:center;font-size:10px;font-weight:700;background:var(--surface2);border-bottom:2px solid var(--border);color:var(--text2)">${FR?'Effectif':'Staff'}</th>
+        ${PT_TYPES.map(t=>`<th style="padding:7px 8px;text-align:center;font-size:11px;font-weight:700;background:${t.col}18;color:${t.col};border-bottom:2px solid ${t.col}55;white-space:nowrap;min-width:80px">
+          <div>${t.k}</div><div style="font-size:9px;font-weight:500;opacity:.8">${t.l}</div>
+          ${t.abs?'<div style="font-size:8px;background:rgba(239,68,68,.15);color:#dc2626;border-radius:5px;padding:1px 4px">≡abs</div>':''}
+        </th>`).join('')}
+        <th style="padding:9px 8px;text-align:center;font-size:11px;font-weight:700;color:var(--primary);background:var(--primary)0a;border-bottom:2px solid var(--primary)44">Total</th>
+      </tr></thead>
+      <tbody>${deptRows}</tbody>
+      <tfoot><tr style="border-top:3px solid var(--primary)"><td colspan="${2+PT_TYPES.length+1}" style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:var(--primary)0d">
+            <th style="padding:9px 12px;text-align:left;font-size:10px;font-weight:800;color:var(--primary);text-transform:uppercase;position:sticky;left:0;background:var(--primary)0d;min-width:150px">${FR?'CUMUL TOTAL':'GRAND TOTAL'}</th>
+            <th style="padding:9px 8px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">${FR?'Effectif':'Staff'}</th>
+            ${PT_TYPES.map(t=>`<th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:700;color:${t.col};min-width:80px">${t.k}<br><span style="font-size:9px;opacity:.8">${t.l}</span></th>`).join('')}
+            <th style="padding:9px 8px;text-align:center;font-size:11px;font-weight:700;color:var(--primary)">Total</th>
+          </tr></thead>
+          <tbody><tr style="background:var(--primary)05">
+            <td style="padding:11px 12px;font-weight:800;font-size:13px;color:var(--primary);position:sticky;left:0;background:var(--primary)05">${FR?'Tous départements':'All departments'}</td>
+            <td style="padding:11px;text-align:center"><div style="font-weight:800;font-size:17px">${totalEmps}</div><div style="font-size:10px;color:var(--text2)">100%</div></td>
+            ${cumulCells}
+            <td style="padding:11px;text-align:center;background:var(--primary)">
+              <div style="font-weight:800;font-size:17px;color:#fff">${grandTotalAll||'—'}</div>
+              ${grandTotalAll?`<div style="font-size:10px;color:rgba(255,255,255,.8)">${Math.round(grandTotalAll/totalEmps*100)}%</div>`:''}
+            </td>
+          </tr></tbody>
+        </table>
+      </td></tr></tfoot>
+    </table>
+  </div>`;
+
+  return`
+  <div class="card s2-bloc" data-dept="__global__" style="overflow:hidden;margin-bottom:14px">
+    <div style="padding:14px 18px;background:var(--primary);border-bottom:1px solid var(--border)">
+      <div style="font-family:var(--fh);font-weight:800;font-size:15px;color:#fff">${titleFull}</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:3px">
+        ${FR?'Récapitulatif par Département — tous types de pointage':'By Department — all attendance types'}
+        &nbsp;|&nbsp; ${totalEmps} ${FR?'employés actifs':'active employees'}
+      </div>
+    </div>
+    ${tableHtml}
+  </div>`;
+}
+
+
+function expSynth2PDF(){
+  const FR=lang==='fr';
+  const p=getSynth2Params();
+  let pl=p.mode==='day'?p.date:p.mode==='month'?T('months')[p.month-1]+' '+p.year:''+p.year;
+  const title=(FR?'Synthèse 2 — ':'Summary 2 — ')+pl+(p.shift?' | Shift: '+p.shift:'')+(p.eq?' | Éq.'+p.eq:'')+(p.svc?' | '+p.svc:'');
+  const themeColors={ocean:'#1a56e8',violet:'#7c3aed',foret:'#059669',rouge:'#dc2626',ardoise:'#475569',nuit:'#38bdf8'};
+  const primary=themeColors[cfg.theme]||'#1a56e8';
+  const blocs=document.querySelectorAll('.s2-bloc');
+  const w=window.open('','_blank');
+  if(!w){toast(FR?'Autorisez les popups':'Allow popups','error');return;}
+  let body='';
+  blocs.forEach(b=>{
+    const dept=b.dataset.dept==='__global__'?(FR?'Récapitulatif Global':'Global Summary'):b.dataset.dept;
+    const tbl=b.querySelector('table');
+    if(tbl)body+=`<div class="sec">${dept}</div>${tbl.outerHTML}`;
+  });
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#111;padding:16px;font-size:10px}
+    h1{font-size:14px;color:${primary};margin-bottom:2px;font-weight:700}.sub{font-size:9px;color:#666;margin-bottom:10px}
+    .sec{font-size:12px;font-weight:700;color:${primary};border-bottom:2px solid ${primary};padding-bottom:4px;margin:14px 0 8px}
+    table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9px;page-break-inside:avoid}
+    thead th{background:${primary}22;padding:5px 7px;border:1px solid #ccc;font-size:8px;font-weight:700;text-transform:uppercase;color:${primary};text-align:center;white-space:nowrap}
+    thead th:first-child,thead th:nth-child(2){text-align:left}
+    tbody td{padding:4px 7px;border:1px solid #ddd;text-align:center;font-size:9px}
+    tbody td:first-child,tbody td:nth-child(2){text-align:left;font-weight:600}
+    tbody tr:nth-child(even){background:#f8f8ff}
+    tfoot td{background:${primary}22;font-weight:700;border:1px solid #ccc;text-align:center;padding:5px 7px;color:${primary}}
+    @page{margin:10mm;size:A4 landscape}
+  </style></head><body>
+    <h1>${title}</h1>
+    <div class="sub">PointageRH | ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+    ${body}
+  </body></html>`);
+  w.document.close();setTimeout(()=>w.print(),600);
+}
+
+function expSynth2Excel(){
+  if(typeof XLSX==='undefined'){toast('XLSX non disponible','error');return;}
+  const FR=lang==='fr';
+  const p=getSynth2Params();
+  const {emps,pairs}=buildPTKeys(p.mode,p.date,p.month,p.year,p.shift,p.eq,p.svc);
+  const empData={};
+  emps.forEach(e=>{empData[e.mat]={svc:e.svc,fct:e.fct};PT_TYPES.forEach(t=>empData[e.mat][t.k]=0);});
+  pairs.forEach(({e,key})=>{const v=ptd[key];if(v&&empData[e.mat]&&empData[e.mat][v]!==undefined)empData[e.mat][v]++;});
+  const allList=Object.values(empData);
+  const svcs2=p.svc?[p.svc]:SERVICES.filter(s=>emps.some(e=>e.svc===s));
+  const wb=XLSX.utils.book_new();
+  function makeSheet(lst,nb){
+    const fcts=[...new Set(lst.map(r=>r.fct))].sort();
+    const h=[FR?'Fonction':'Position',FR?'Effectif':'Staff',...PT_TYPES.map(t=>t.k+' ('+t.l+')'),'Total','%'];
+    const rows=[h];
+    fcts.forEach(fct=>{
+      const ef=lst.filter(r=>r.fct===fct);const eff=ef.length;
+      const row=[fct,eff];let tot=0;
+      PT_TYPES.forEach(t=>{const v=ef.reduce((s,r)=>s+(r[t.k]||0),0);row.push(v);tot+=v;});
+      row.push(tot);row.push(eff>0?Math.round(tot/eff*100)+'%':'—');rows.push(row);
+    });
+    const c=[FR?'CUMUL':'TOTAL',nb];let gt=0;
+    PT_TYPES.forEach(t=>{const v=lst.reduce((s,r)=>s+(r[t.k]||0),0);c.push(v);gt+=v;});
+    c.push(gt);c.push(nb>0?Math.round(gt/nb*100)+'%':'—');rows.push(c);
+    return XLSX.utils.aoa_to_sheet(rows);
+  }
+  XLSX.utils.book_append_sheet(wb,makeSheet(allList,emps.length),FR?'Global':'Global');
+  svcs2.forEach(dept=>{
+    const dl=allList.filter(r=>r.svc===dept);if(!dl.length)return;
+    XLSX.utils.book_append_sheet(wb,makeSheet(dl,dl.length),dept.substring(0,30));
+  });
+  let pl=p.mode==='day'?p.date:p.mode==='month'?T('months')[p.month-1]+'_'+p.year:''+p.year;
+  XLSX.writeFile(wb,'Synthese2_PT_'+pl+(p.shift?'_'+p.shift:'')+'.xlsx');
+  toast(T('msg_export'),'success');
+}
+
+/* ── EXPORTS SYNTHÈSE POINTAGE ── */
+function expSynthPTPDF(){
+  const FR=lang==='fr';
+  const p=getSynthParams();
+  let periodLabel=p.mode==='day'?p.date:p.mode==='month'?T('months')[p.month-1]+' '+p.year:''+p.year;
+  const title=(FR?'Synthèse Pointage — ':'Attendance Summary — ')+periodLabel+(p.shift?' | Shift: '+p.shift:'')+(p.eq?' | Éq.'+p.eq:'')+(p.svc?' | '+p.svc:'');
+
+  /* Couleur thème active */
+  const themeColors={ocean:'#1a56e8',violet:'#7c3aed',foret:'#059669',rouge:'#dc2626',ardoise:'#475569',nuit:'#38bdf8'};
+  const primary=themeColors[cfg.theme]||'#1a56e8';
+  const primaryLight=primary+'22';
+
+  const w=window.open('','_blank');
+  if(!w){toast(FR?'Autorisez les popups':'Allow popups','error');return;}
+  const css=`<style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;color:#111;padding:16px;font-size:10px;background:#fff}
+    h1{font-size:14px;color:${primary};margin-bottom:2px;font-weight:700}
+    .sub{font-size:9px;color:#666;margin-bottom:10px}
+    .sec{font-size:12px;font-weight:700;color:${primary};border-bottom:2px solid ${primary};padding-bottom:4px;margin:14px 0 8px}
+    table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:9px;page-break-inside:avoid}
+    thead th{background:${primaryLight};padding:5px 7px;border:1px solid #ccc;font-size:8px;font-weight:700;text-transform:uppercase;color:${primary};text-align:center;white-space:nowrap}
+    thead th:first-child{text-align:left}
+    tbody td{padding:4px 7px;border:1px solid #ddd;text-align:center}
+    tbody td:first-child,tbody td:nth-child(2){text-align:left;font-weight:600}
+    tbody tr:nth-child(even){background:#f8f8ff}
+    tfoot td{background:${primaryLight};font-weight:700;border:1px solid #ccc;text-align:center;padding:5px 7px;color:${primary}}
+    @page{margin:10mm;size:A4 landscape}
+  </style>`;
+
+  /* Récupérer les tableaux du DOM */
+  const s1=document.getElementById('synthPT1');
+  const s2=document.getElementById('synthPT2');
+  const blocs=document.querySelectorAll('.syn2-bloc');
+  let body='';
+  if(s1){body+=`<div class="sec">${FR?'Synthèse 1 — Par type de pointage':'Summary 1 — By type'}</div>`;body+=s1.querySelector('table')?.outerHTML||'';}
+  if(s2){body+=`<div class="sec">${FR?'Synthèse 2 — Récapitulatif global':'Summary 2 — Global'}</div>`;body+=s2.querySelector('table')?.outerHTML||'';}
+  blocs.forEach(b=>{body+=`<div class="sec">${b.dataset.dept}</div>`;body+=b.querySelector('table')?.outerHTML||'';});
+
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>${css}</head><body>
+    <h1>${title}</h1>
+    <div class="sub">PointageRH | ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+    ${body}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),600);
+}
+
+function expSynthPTExcel(){
+  if(typeof XLSX==='undefined'){toast('XLSX non disponible','error');return;}
+  const FR=lang==='fr';
+  const p=getSynthParams();
+  const {emps,pairs}=buildPTKeys(p.mode,p.date,p.month,p.year,p.shift,p.eq,p.svc);
+  const wb=XLSX.utils.book_new();
+
+  /* Onglet Synthèse 1 */
+  const counts={};PT_TYPES.forEach(t=>counts[t.k]=0);
+  pairs.forEach(({key})=>{const v=ptd[key];if(v&&counts[v]!==undefined)counts[v]++;});
+  const s1rows=[[FR?'Type':'Type',FR?'Libellé':'Label',FR?'Nombre':'Count','%',FR?'Absence':'Absence?']];
+  const total1=PT_TYPES.reduce((s,t)=>s+counts[t.k],0);
+  PT_TYPES.forEach(t=>{s1rows.push([t.k,t.l,counts[t.k],emps.length>0?Math.round(counts[t.k]/emps.length*100)+'%':'—',t.abs?'Oui':'Non']);});
+  s1rows.push([FR?'TOTAL':'TOTAL','',total1,'100%','']);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1rows),FR?'Par Type':'By Type');
+
+  /* Onglet global Synthèse 2 */
+  const empData={};
+  emps.forEach(e=>{empData[e.mat]={svc:e.svc,fct:e.fct};PT_TYPES.forEach(t=>empData[e.mat][t.k]=0);});
+  pairs.forEach(({e,key})=>{const v=ptd[key];if(v&&empData[e.mat]&&empData[e.mat][v]!==undefined)empData[e.mat][v]++;});
+
+  function makeExcelSheet(empsList,nbEmps){
+    const fcts=[...new Set(empsList.map(r=>r.fct))].sort();
+    const header=[FR?'Fonction':'Position',FR?'Effectif':'Staff',...PT_TYPES.map(t=>t.k+' ('+t.l+')'),'Total','Taux%'];
+    const rows=[header];
+    fcts.forEach(fct=>{
+      const ef=empsList.filter(r=>r.fct===fct);const eff=ef.length;
+      const row=[fct,eff];let tot=0;
+      PT_TYPES.forEach(t=>{const v=ef.reduce((s,r)=>s+(r[t.k]||0),0);row.push(v);tot+=v;});
+      row.push(tot);row.push(eff>0?Math.round(tot/eff*100)+'%':'—');rows.push(row);
+    });
+    const cumul=[FR?'CUMUL TOTAL':'GRAND TOTAL',nbEmps];
+    let gt=0;PT_TYPES.forEach(t=>{const v=empsList.reduce((s,r)=>s+(r[t.k]||0),0);cumul.push(v);gt+=v;});
+    cumul.push(gt);cumul.push(nbEmps>0?Math.round(gt/nbEmps*100)+'%':'—');rows.push(cumul);
+    return XLSX.utils.aoa_to_sheet(rows);
+  }
+
+  const allList=Object.values(empData);
+  XLSX.utils.book_append_sheet(wb,makeExcelSheet(allList,emps.length),FR?'Global':'Global');
+  const svcs=p.svc?[p.svc]:SERVICES.filter(s=>emps.some(e=>e.svc===s));
+  svcs.forEach(dept=>{
+    const dl=allList.filter(r=>r.svc===dept);
+    if(!dl.length)return;
+    XLSX.utils.book_append_sheet(wb,makeExcelSheet(dl,dl.length),dept.substring(0,30));
+  });
+  let pl=p.mode==='day'?p.date:p.mode==='month'?T('months')[p.month-1]+'_'+p.year:''+p.year;
+  XLSX.writeFile(wb,'Synthese_PT_'+pl+(p.shift?'_'+p.shift:'')+'.xlsx');
+  toast(T('msg_export'),'success');
+}
+
+function massPT(){
+  const m=gM(),y=gY();
+  document.getElementById('mTit').textContent=T('massTitle');document.getElementById('modal').className='modal';
+  document.getElementById('mBod').innerHTML=`
+    <p class="sm cm mb3">${T('massDesc')}</p>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_from')}</label><input type="number" class="fc" id="ptf" min="1" max="${dim(m,y)}" value="1"></div>
+      <div class="fg"><label class="fl">${T('lbl_to')}</label><input type="number" class="fc" id="ptt" min="1" max="${dim(m,y)}" value="${dim(m,y)}"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_status')}</label>
+        <select class="fc" id="pts">${PT_TYPES.map(t=>`<option value="${t.k}">${t.k} — ${t.l}</option>`).join('')}</select>
+      </div>
+      <div class="fg">
+        <label class="fl">Shift <span class="xs cm">(${lang==='fr'?'optionnel':'optional'})</span></label>
+        <select class="fc" id="ptshift">
+          <option value="">${lang==='fr'?'Aucun shift':'No shift'}</option>
+          ${cfg.shifts.map(s=>`<option value="${s.n}">${s.n} (${s.s}–${s.e})</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_svc3')}</label>
+        <select class="fc" id="ptsv">
+          <option value="">${T('allSvcs')}</option>
+          ${SERVICES.map(s=>`<option>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label class="fl">${T('col_eq')} <span class="xs cm">(${T('allTeams')})</span></label>
+        <select class="fc" id="pteq">
+          <option value="">${T('allTeams')}</option>
+          ${EQUIPES.map(q=>`<option value="${q}">Équipe ${q}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="padding:10px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:12px;color:var(--text2)">
+      <i class="fa fa-circle-info" style="color:var(--primary)"></i>
+      ${lang==='fr'
+        ? 'Sans filtre : <b>tous</b>. Département seul : <b>tout le département</b>. Département + Équipe : <b>cette équipe</b>. Le shift est enregistré en arrière-plan pour les filtres.'
+        : 'No filter: <b>all</b>. Dept only: <b>whole dept</b>. Dept + Team: <b>that team</b>. Shift is saved in background for filtering.'}
+    </div>`;
+  document.getElementById('mFtr').innerHTML=`<button class="btn bg2" onclick="closeM()">${T('cancel')}</button><button class="btn bp" onclick="applyMass()"><i class="fa fa-wand-magic-sparkles"></i> ${T('apply')}</button>`;
+  openM();
+}
+function applyMass(){
+  const m=gM(),y=gY();
+  const f=parseInt(document.getElementById('ptf').value),t2=parseInt(document.getElementById('ptt').value);
+  const s=document.getElementById('pts').value;
+  const sv=document.getElementById('ptsv').value;
+  const eq=document.getElementById('pteq').value;
+  const shift=document.getElementById('ptshift').value;
+  let list=actifs();
+  if(sv) list=list.filter(e=>e.svc===sv);
+  if(eq) list=list.filter(e=>e.eq===eq);
+  let skip=0;
+  for(let d=f;d<=t2;d++){
+    if(isLocked(d,m,y)){skip++;continue;}
+    list.forEach(e=>{
+      ptd[`${e.mat}-${y}-${m}-${d}`]=s;
+      /* Enregistrer le shift en arrière-plan si choisi */
+      if(shift) shiftData[e.mat+'-'+y+'-'+m+'-'+d]=shift;
+    });
+  }
+  closeM();render('pointage');
+  const scope=sv&&eq?`${sv}/Éq.${eq}`:sv?sv:eq?`Éq.${eq}`:(lang==='fr'?'Tous':'All');
+  const shiftInfo=shift?` | Shift: ${shift}`:'';
+  toast(`${s} ${T('msg_applied')} — ${list.length} emp. [${scope}${shiftInfo}], j.${f}–${t2}${skip>0?' ('+skip+' '+T('msg_locked')+')':''}`, 'success');
+}
+
+/* ═══════════════════════════════════
+   ABSENCES
+═══════════════════════════════════ */
+function rAbs(){
+  const m=gM(),y=gY(),FR=lang==='fr';
+  const ac=actifs(),days=dim(m,y);
+  const absPT=PT_TYPES.filter(t=>t.abs);
+  let rows=[];
+  ac.forEach(e=>{
+    for(let d=1;d<=days;d++){
+      const v=ptd[`${e.mat}-${y}-${m}-${d}`];
+      const tp=getPT(v);
+      if(tp&&tp.abs) rows.push({e,d,type:v,l:tp.l,col:tp.col,dt:`${y}-${pad(m)}-${pad(d)}`});
+    }
+  });
+  const sum={};
+  ac.forEach(e=>{const s={e,tot:0};absPT.forEach(t=>s[t.k]=0);sum[e.mat]=s;});
+  rows.forEach(r=>{if(sum[r.e.mat]){sum[r.e.mat][r.type]=(sum[r.e.mat][r.type]||0)+1;sum[r.e.mat].tot++;}});
+  const typeTotals={};
+  absPT.forEach(t=>{typeTotals[t.k]=rows.filter(r=>r.type===t.k).length;});
+  const grandTotal=rows.length;
+  const totalEmp=ac.length;
+
+  const detailRows=rows.map((x,i)=>{
+    const shKey=x.e.mat+'-'+y+'-'+m+'-'+x.d;
+    const shVal=shiftData[shKey]||'';
+    return`<tr data-t="${x.type}" data-s="${x.e.svc}" data-n="${x.e.nom} ${x.e.pre} ${x.e.mat}" data-d="${x.dt}" data-sh="${shVal}">
+    <td>${i+1}</td>
+    <td><b>${x.dt}</b> (${T('days')[dow(x.d,m,y)]})</td>
+    <td><span class="tag tbl2">${x.e.mat}</span></td>
+    <td><b>${x.e.nom}</b> ${x.e.pre}</td>
+    <td>${x.e.svc}</td><td>${x.e.fct}</td>
+    <td><span class="tag" style="background:${x.col}18;color:${x.col}">${x.type} — ${x.l}</span></td>
+    <td style="font-size:11px;color:var(--text2)">${shVal||'—'}</td>
+  </tr>`;
+  }).join('');
+
+  const recapRows=Object.values(sum).filter(r=>r.tot>0).sort((a,b)=>b.tot-a.tot).map((r,i)=>`<tr>
+    <td>${i+1}</td><td><b>${r.e.nom}</b> ${r.e.pre}</td><td>${r.e.svc}</td>
+    ${absPT.map(t=>`<td style="text-align:center;font-weight:700;color:${(r[t.k]||0)>0?t.col:'var(--text3)'}">${r[t.k]||0}</td>`).join('')}
+    <td><span class="tag tko">${r.tot}</span></td>
+  </tr>`).join('');
+
+  const cumulCells=absPT.map(t=>{
+    const n=typeTotals[t.k]||0;
+    const tx=totalEmp>0?Math.round(n/totalEmp*100):0;
+    return`<td style="text-align:center;padding:9px 10px">
+      <div style="font-weight:800;font-size:16px;color:${n>0?t.col:'var(--text3)'}">${n>0?n:'—'}</div>
+      ${n>0?`<div style="font-size:10px;font-weight:700;color:${t.col};opacity:.85">${tx}%</div>`:''}
+    </td>`;
+  }).join('');
+
+  const typeBadges=absPT.map(t=>{
+    const n=typeTotals[t.k]||0;
+    const tx=totalEmp>0?Math.round(n/totalEmp*100):0;
+    return n>0?`<div style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;background:${t.col}15;border:1px solid ${t.col}33;margin:2px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${t.col};display:inline-block"></span>
+      <span style="font-weight:700;font-size:12px;color:${t.col}">${t.k}</span>
+      <span style="font-size:11px;color:var(--text2)">${t.l}</span>
+      <span style="font-weight:800;font-size:14px;color:${t.col}">${n}</span>
+      <span style="font-size:10px;color:${t.col};opacity:.8">(${tx}%)</span>
+    </div>`:'';
+  }).join('');
+
+  return`
+  <div class="tabb">
+    <button class="tabbt active" id="tab-det" onclick="swAbs('det')">${T('tabDetail')}</button>
+    <button class="tabbt" id="tab-rec" onclick="swAbs('rec')">${T('tabRecap')}</button>
+    <button class="tabbt" id="tab-syn" onclick="swAbs('syn')">${FR?'Synthèse':'Summary'}</button>
+  </div>
+
+  <div id="abs-det" class="card mt3">
+    <div class="toolbar">
+      <div class="sbox"><i class="fa fa-search"></i><input type="text" placeholder="${T('searchEmp')}" id="aQ" oninput="fAbs()"></div>
+      <input type="date" class="fc" id="aDate" style="width:auto;padding:7px 9px" onchange="fAbs()" title="${FR?'Filtrer par date':'Filter by date'}">
+      <select class="fc" style="width:auto;padding:7px 9px" id="aT" onchange="fAbs()">
+        <option value="">${T('allTypes')}</option>
+        ${absPT.map(t=>`<option value="${t.k}">${t.k} — ${t.l}</option>`).join('')}
+      </select>
+      <select class="fc" style="width:auto;padding:7px 9px" id="aSh" onchange="fAbs()">
+        <option value="">${FR?'Tous shifts':'All shifts'}</option>
+        ${cfg.shifts.map(s=>`<option value="${s.n}">${s.n}</option>`).join('')}
+      </select>
+      <select class="fc" style="width:auto;padding:7px 9px" id="aS" onchange="fAbs()">
+        <option value="">${T('allSvc')}</option>
+        ${SERVICES.map(s=>`<option>${s}</option>`).join('')}
+      </select>
+      <button class="btn bg2 bsm" onclick="document.getElementById('aDate').value='';document.getElementById('aSh').value='';document.getElementById('aT').value='';document.getElementById('aS').value='';document.getElementById('aQ').value='';fAbs()"><i class="fa fa-xmark"></i></button>
+      <button class="btn bp bsm" onclick="expAbsPDF('det')"><i class="fa fa-file-pdf"></i> PDF</button>
+      <button class="btn bs bsm" onclick="expAbsExcel('det')"><i class="fa fa-file-excel"></i> Excel</button>
+    </div>
+    <div class="tw"><table id="abs-det-tbl">
+      <thead><tr><th>#</th><th>${T('col_date')}</th><th>${T('col_mat')}</th><th>${T('col_name')}</th><th>${T('col_svc')}</th><th>${T('col_fct')}</th><th>${T('col_type')}</th><th>Shift</th></tr></thead>
+      <tbody id="absBody">${detailRows}</tbody>
+    </table></div>
+    <div style="border-top:2px solid var(--border);padding:12px 16px;background:var(--surface2)">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">${FR?'Total général':'Grand total'}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${typeBadges}</div>
+      <div style="font-size:12px;color:var(--text2)">
+        ${FR?'Total absences':'Total absences'}: <strong style="color:var(--danger)">${grandTotal}</strong>
+        &nbsp;|&nbsp;${FR?'Effectif':'Staff'}: <strong>${totalEmp}</strong>
+        &nbsp;|&nbsp;${FR?'Taux global':'Overall rate'}: <strong style="color:var(--primary)">${totalEmp>0?Math.round(grandTotal/totalEmp*100):0}%</strong>
+      </div>
+    </div>
+    <div style="padding:9px 14px;font-size:12px;color:var(--text2)">${rows.length} ${T('absCount')} — ${T('months')[m-1]} ${y}</div>
+  </div>
+
+  <div id="abs-rec" class="card mt3 hidden">
+    <div style="padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn bp bsm" onclick="expAbsPDF('rec')"><i class="fa fa-file-pdf"></i> PDF</button>
+      <button class="btn bs bsm" onclick="expAbsExcel('rec')"><i class="fa fa-file-excel"></i> Excel</button>
+    </div>
+    <div class="tw"><table id="abs-rec-tbl">
+      <thead><tr>
+        <th>#</th><th>${T('col_name')}</th><th>${T('col_svc')}</th>
+        ${absPT.map(t=>`<th style="color:${t.col};background:${t.col}10" title="${t.l}">${t.k}<br><span style="font-size:9px;font-weight:500;opacity:.8">${t.l}</span></th>`).join('')}
+        <th>${T('col_absT')}</th>
+      </tr></thead>
+      <tbody>${recapRows}</tbody>
+      <tfoot>
+        <tr style="background:var(--primary)08;border-top:2px solid var(--primary)33">
+          <td colspan="3" style="padding:10px 12px;font-weight:800;font-size:12px;color:var(--primary)">
+            ${FR?'CUMUL TOTAL':'GRAND TOTAL'}
+            <span style="font-size:10px;font-weight:500;margin-left:6px">${FR?'Effectif':'Staff'}: ${totalEmp}</span>
+          </td>
+          ${cumulCells}
+          <td style="text-align:center;padding:10px;background:var(--primary)">
+            <div style="font-weight:800;font-size:16px;color:#fff">${grandTotal}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.8)">${totalEmp>0?Math.round(grandTotal/totalEmp*100):0}%</div>
+          </td>
+        </tr>
+      </tfoot>
+    </table></div>
+  </div>
+
+  <div id="abs-syn" class="hidden">
+    <!-- Filtres synthèse -->
+    <div class="card mt3">
+      <div class="ch">
+        <div class="ct"><i class="fa fa-filter cp"></i> ${FR?'Filtres Synthèse':'Summary Filters'}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn bp bsm" onclick="expSynthPDF()"><i class="fa fa-file-pdf"></i> PDF</button>
+          <button class="btn bs bsm" onclick="expSynthExcel()"><i class="fa fa-file-excel"></i> Excel</button>
+        </div>
+      </div>
+      <div class="cb" style="padding:12px 18px">
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Mode':'Mode'}</label>
+            <select class="fc" id="syn2_mode" style="width:auto;padding:7px 10px" onchange="updateSyn2()">
+              <option value="day">${FR?'Jour J':'Day'}</option>
+              <option value="month">${FR?'Mois':'Month'}</option>
+              <option value="year">${FR?'Année':'Year'}</option>
+            </select>
+          </div>
+          <div id="syn2_date_w">
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Date':'Date'}</label>
+            <input type="date" class="fc" id="syn2_date" value="${new Date().toISOString().split('T')[0]}" style="width:auto;padding:7px 10px" onchange="updateSyn2()">
+          </div>
+          <div id="syn2_month_w" class="hidden">
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Mois':'Month'}</label>
+            <select class="fc" id="syn2_month" style="width:auto;padding:7px 10px" onchange="updateSyn2()">
+              ${T('months').map((mn,i)=>`<option value="${i+1}"${i+1===m?' selected':''}>${mn}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Année':'Year'}</label>
+            <select class="fc" id="syn2_year" style="width:auto;padding:7px 10px" onchange="updateSyn2()">
+              <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">Shift</label>
+            <select class="fc" id="syn2_shift" style="width:auto;padding:7px 10px" onchange="updateSyn2()">
+              <option value="">${FR?'Tous shifts':'All shifts'}</option>
+              ${cfg.shifts.map(s=>`<option value="${s.n}">${s.n} (${s.s}–${s.e})</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Équipe':'Team'}</label>
+            <select class="fc" id="syn2_eq" style="width:auto;padding:7px 10px" onchange="updateSyn2()">
+              <option value="">${T('allTeams')}</option>
+              ${EQUIPES.map(q=>`<option value="${q}">Éq.${q}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:4px">${FR?'Département':'Dept.'}</label>
+            <select class="fc" id="syn2_svc" style="width:auto;padding:7px 10px" onchange="updateSyn2()">
+              <option value="">${FR?'Tous':'All'}</option>
+              ${SERVICES.map(s=>`<option>${s}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="syn2Result" class="mt3"></div>
+  </div>`;
+}
+
+function swAbs(t){
+  ['det','rec','syn'].forEach(x=>{const el=document.getElementById('abs-'+x);if(el)el.classList.toggle('hidden',t!==x);});
+  document.querySelectorAll('.tabbt').forEach(b=>b.classList.remove('active'));
+  const tb=document.getElementById('tab-'+t);if(tb)tb.classList.add('active');
+  if(t==='syn'){const r=document.getElementById('syn2Result');if(r&&!r.innerHTML.trim())updateSyn2();}
+}
+
+function fAbs(){
+  const q=(document.getElementById('aQ')?.value||'').toLowerCase();
+  const tp=document.getElementById('aT')?.value||'';
+  const sv=document.getElementById('aS')?.value||'';
+  const dt=document.getElementById('aDate')?.value||'';
+  const sh=document.getElementById('aSh')?.value||'';
+  document.querySelectorAll('#absBody tr').forEach(r=>{
+    const ok=
+      (!q  || r.dataset.n.toLowerCase().includes(q)) &&
+      (!tp || r.dataset.t===tp) &&
+      (!sv || r.dataset.s===sv) &&
+      (!dt || r.dataset.d===dt) &&
+      (!sh || r.dataset.sh===sh);
+    r.classList.toggle('hidden',!ok);
+  });
+}
+
+/* ════════════════════════════════
+   SYNTHÈSE CROISÉE ABSENCES
+   Fonctions (lignes) × Types de pointage (colonnes)
+   Titre en haut avec date + shift
+════════════════════════════════ */
+function updateSyn2(){
+  const mode=document.getElementById('syn2_mode')?.value||'day';
+  const date=document.getElementById('syn2_date')?.value||new Date().toISOString().split('T')[0];
+  const month=parseInt(document.getElementById('syn2_month')?.value||new Date().getMonth()+1);
+  const year=parseInt(document.getElementById('syn2_year')?.value||new Date().getFullYear());
+  const shift=document.getElementById('syn2_shift')?.value||'';
+  const eq=document.getElementById('syn2_eq')?.value||'';
+  const svc=document.getElementById('syn2_svc')?.value||'';
+  /* Afficher/masquer sélecteurs selon mode */
+  const dw=document.getElementById('syn2_date_w');
+  const mw=document.getElementById('syn2_month_w');
+  if(dw)dw.classList.toggle('hidden',mode!=='day');
+  if(mw)mw.classList.toggle('hidden',mode==='year');
+  const res=document.getElementById('syn2Result');
+  if(res)res.innerHTML=calcSyn2(mode,date,month,year,shift,eq,svc);
+}
+
+function buildSyn2Keys(mode,date,month,year,shift,eq,svc){
+  let emps=actifs();
+  if(svc)emps=emps.filter(e=>e.svc===svc);
+  if(eq)emps=emps.filter(e=>e.eq===eq);
+  let pairs=[];
+  if(mode==='day'&&date){
+    const [yy,mm,dd]=date.split('-').map(Number);
+    emps.forEach(e=>pairs.push({e,key:`${e.mat}-${yy}-${mm}-${dd}`}));
+  } else if(mode==='month'){
+    const days=dim(month,year);
+    for(let d=1;d<=days;d++) emps.forEach(e=>pairs.push({e,key:`${e.mat}-${year}-${month}-${d}`}));
+  } else {
+    for(let mo=1;mo<=12;mo++){const days=dim(mo,year);for(let d=1;d<=days;d++) emps.forEach(e=>pairs.push({e,key:`${e.mat}-${year}-${mo}-${d}`}));}
+  }
+  if(shift) pairs=pairs.filter(p=>shiftData[p.key]===shift);
+  const result={};
+  emps.forEach(e=>{result[e.mat]={e,fct:e.fct,svc:e.svc};PT_TYPES.forEach(t=>result[e.mat][t.k]=0);});
+  pairs.forEach(({e,key})=>{
+    const v=ptd[key];
+    if(v&&result[e.mat]&&result[e.mat][v]!==undefined) result[e.mat][v]++;
+  });
+  return result;
+}
+
+function calcSyn2(mode,date,month,year,shift,eq,svc){
+  const FR=lang==='fr';
+  const result=buildSyn2Keys(mode,date,month,year,shift,eq,svc);
+  const svcs=svc?[svc]:SERVICES.filter(s=>actifs().some(e=>e.svc===s));
+
+  /* Titre dynamique en haut */
+  let periodLabel='';
+  if(mode==='day') periodLabel=date;
+  else if(mode==='month') periodLabel=`${T('months')[month-1]} ${year}`;
+  else periodLabel=`${year}`;
+  const shiftLabel=shift?` | Shift: ${shift}`:'';
+  const eqLabel=eq?` | Éq.${eq}`:'';
+  const svcLabel=svc?` | ${svc}`:'';
+  const titleLine=`${FR?'Récapitulatif des pointages du':'Attendance summary —'} ${periodLabel}${shiftLabel}${eqLabel}${svcLabel}`;
+
+  if(!Object.keys(result).length)
+    return`<div style="padding:40px;text-align:center;color:var(--text3)">${FR?'Aucune donnée':'No data'}</div>`;
+
+  const totalActifs=Object.keys(result).length;
+
+  /* Tableau croisé : lignes=fonctions, colonnes=types de pointage */
+  function makeTable(empsList, deptLabel, nbEmps){
+    const fcts=[...new Set(empsList.map(r=>r.fct))].sort();
+    /* Totaux colonnes */
+    const colTotals={};
+    PT_TYPES.forEach(t=>{colTotals[t.k]=empsList.reduce((s,r)=>s+(r[t.k]||0),0);});
+    const grandTotal=PT_TYPES.reduce((s,t)=>s+colTotals[t.k],0);
+
+    function cellVal(v,eff){
+      if(!v) return`<td style="padding:6px 8px;text-align:center;color:var(--text3)">—</td>`;
+      const tx=eff>0?Math.round(v/eff*100):0;
+      return`<td style="padding:5px 8px;text-align:center">
+        <div style="font-weight:800;font-size:13px;color:${PT_TYPES.find(t=>t.k===arguments[2])?.col||'var(--primary)'}">${v}</div>
+        <div style="font-size:9px;font-weight:600;opacity:.75;color:${PT_TYPES.find(t=>t.k===arguments[2])?.col||'var(--primary)'}">(${tx}%)</div>
+      </td>`;
+    }
+
+    const rows=fcts.map((fct,i)=>{
+      const empsF=empsList.filter(r=>r.fct===fct);
+      const eff=empsF.length;
+      const rowTotal=PT_TYPES.reduce((s,t)=>s+empsF.reduce((ss,r)=>ss+(r[t.k]||0),0),0);
+      return`<tr style="border-bottom:1px solid var(--border);${i%2===1?'background:var(--surface2)':''}">
+        <td style="padding:8px 12px;font-weight:600;font-size:12px;position:sticky;left:0;background:${i%2===1?'var(--surface2)':'var(--surface)'}">${fct}</td>
+        <td style="padding:8px 8px;text-align:center;font-weight:700;font-size:12px;color:var(--text2)">${eff}</td>
+        ${PT_TYPES.map(t=>{
+          const v=empsF.reduce((s,r)=>s+(r[t.k]||0),0);
+          const tx=eff>0&&v>0?Math.round(v/eff*100):0;
+          return v>0
+            ?`<td style="padding:5px 8px;text-align:center"><div style="font-weight:800;font-size:13px;color:${t.col}">${v}</div><div style="font-size:9px;font-weight:600;color:${t.col};opacity:.75">(${tx}%)</div></td>`
+            :`<td style="padding:6px 8px;text-align:center;color:var(--text3)">—</td>`;
+        }).join('')}
+        <td style="padding:6px 8px;text-align:center;background:var(--primary)05;border-left:1px solid var(--primary)20">
+          <div style="font-weight:800;font-size:14px;color:${rowTotal>0?'var(--primary)':'var(--text3)'}">${rowTotal||'—'}</div>
+          ${rowTotal>0?`<div style="font-size:9px;color:var(--primary);opacity:.7">(${Math.round(rowTotal/eff*100)}%)</div>`:''}
+        </td>
+      </tr>`;
+    }).join('');
+
+    /* Ligne CUMUL TOTAL en bas */
+    const cumulRow=`<tr style="border-top:3px solid var(--primary)">
+      <td colspan="${2+PT_TYPES.length+1}" style="padding:0">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:var(--primary)0d">
+            <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:800;color:var(--primary);text-transform:uppercase;position:sticky;left:0;background:var(--primary)0d;min-width:130px">
+              ${FR?'CUMUL TOTAL':'GRAND TOTAL'}
+            </th>
+            <th style="padding:8px 10px;text-align:center;font-size:11px;font-weight:700;color:var(--text2)">${FR?'Effectif':'Staff'}</th>
+            ${PT_TYPES.map(t=>`<th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:700;color:${t.col};min-width:80px">${t.k}<br><span style="font-size:9px;opacity:.8">${t.l}</span></th>`).join('')}
+            <th style="padding:8px 10px;text-align:center;font-size:11px;font-weight:700;color:var(--primary)">Total</th>
+          </tr></thead>
+          <tbody><tr style="background:var(--primary)05">
+            <td style="padding:10px 12px;font-weight:800;font-size:13px;color:var(--primary);position:sticky;left:0;background:var(--primary)05">${FR?'Cumul total':'Grand total'}</td>
+            <td style="padding:10px;text-align:center"><div style="font-weight:800;font-size:16px">${nbEmps}</div><div style="font-size:10px;color:var(--text2)">100%</div></td>
+            ${PT_TYPES.map(t=>{
+              const v=colTotals[t.k];
+              const tx=nbEmps>0&&v>0?Math.round(v/nbEmps*100):0;
+              return v>0
+                ?`<td style="padding:10px;text-align:center;background:${t.col}08"><div style="font-weight:800;font-size:16px;color:${t.col}">${v}</div><div style="font-size:10px;font-weight:700;color:${t.col};opacity:.8">${tx}%</div></td>`
+                :`<td style="padding:10px;text-align:center;color:var(--text3);font-size:14px">—</td>`;
+            }).join('')}
+            <td style="padding:10px;text-align:center;background:var(--primary)">
+              <div style="font-weight:800;font-size:16px;color:#fff">${grandTotal||'—'}</div>
+              ${grandTotal?`<div style="font-size:10px;color:rgba(255,255,255,.8)">${Math.round(grandTotal/nbEmps*100)}%</div>`:''}
+            </td>
+          </tr></tbody>
+        </table>
+      </td>
+    </tr>`;
+
+    return`<div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:${180+PT_TYPES.length*90}px">
+        <thead><tr>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);background:var(--surface2);border-bottom:2px solid var(--border);white-space:nowrap;min-width:130px;position:sticky;left:0;z-index:2">${FR?'Fonction':'Position'}</th>
+          <th style="padding:8px 8px;text-align:center;font-size:10px;font-weight:700;background:var(--surface2);border-bottom:2px solid var(--border);color:var(--text2)">${FR?'Effectif':'Staff'}</th>
+          ${PT_TYPES.map(t=>`<th style="padding:7px 8px;text-align:center;font-size:11px;font-weight:700;background:${t.col}18;color:${t.col};border-bottom:2px solid ${t.col}55;white-space:nowrap;min-width:80px">
+            <div>${t.k}</div><div style="font-size:9px;font-weight:500;opacity:.8">${t.l}</div>
+            ${t.abs?`<div style="font-size:8px;background:rgba(239,68,68,.15);color:#dc2626;border-radius:5px;padding:1px 4px">≡abs</div>`:''}
+          </th>`).join('')}
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:700;color:var(--primary);background:var(--primary)0a;border-bottom:2px solid var(--primary)44">Total</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot>${cumulRow}</tfoot>
+      </table>
+    </div>`;
+  }
+
+  /* ── RÉCAPITULATIF GLOBAL ── */
+  const allEmps=Object.values(result);
+  const allFcts=[...new Set(allEmps.map(r=>r.fct))].sort();
+  const globalEmps=allEmps;
+
+  let html=`
+  <div class="card mb3 syn2-bloc" data-dept="__global__" style="overflow:hidden;margin-bottom:14px">
+    <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:var(--primary)0a">
+      <div style="font-family:var(--fh);font-weight:800;font-size:15px;color:var(--primary)">${titleLine}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>${FR?'Récapitulatif cumulatif — tous départements':'Cumulative — all departments'}</span>
+        <span class="tag tbl2">${totalActifs} ${FR?'employés actifs':'active employees'}</span>
+        <span style="font-size:10px;color:var(--text3)">${FR?'Taux = nb concernés / effectif × 100':'Rate = affected / headcount × 100'}</span>
+      </div>
+    </div>
+    ${makeTable(globalEmps,'__global__',totalActifs)}
+  </div>`;
+
+  /* ── DÉTAILS PAR DÉPARTEMENT ── */
+  svcs.forEach(dept=>{
+    const empsDept=Object.values(result).filter(r=>r.svc===dept);
+    if(!empsDept.length) return;
+    const nbEmps=empsDept.length;
+    html+=`
+    <div class="card mb3 syn2-bloc" data-dept="${dept}" style="overflow:hidden;margin-bottom:14px">
+      <div style="padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:12px;height:12px;border-radius:4px;background:var(--primary)"></div>
+          <span style="font-family:var(--fh);font-weight:700;font-size:14px">${dept}</span>
+          <span class="tag tbl2" style="font-size:11px">${nbEmps} ${FR?'emp.':'emp.'}</span>
+        </div>
+        <span style="font-size:11px;color:var(--text2)">${periodLabel}${shiftLabel}${eqLabel}</span>
+      </div>
+      ${makeTable(empsDept,dept,nbEmps)}
+    </div>`;
+  });
+  /* ── TABLEAU RÉCAPITULATIF GLOBAL EN BAS ── */
+  const allEmpsResult=Object.values(result);
+  const totalEmpGlobal=allEmpsResult.length;
+  const recapTotals={};
+  PT_TYPES.forEach(t=>{recapTotals[t.k]=allEmpsResult.reduce((s,r)=>s+(r[t.k]||0),0);});
+  const recapGrand=PT_TYPES.reduce((s,t)=>s+recapTotals[t.k],0);
+
+  html+=`
+  <div class="card" style="overflow:hidden;margin-bottom:14px">
+    <div style="padding:14px 18px;background:var(--primary);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-family:var(--fh);font-weight:800;font-size:15px;color:#fff">
+          ${FR?'Récapitulatif Pointage du':'Attendance Summary —'} ${periodLabel}${shiftLabel}${eqLabel}${svcLabel}
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:3px">
+          ${FR?'Effectif employés actifs :':'Active employees:'} <strong style="font-size:14px;color:#fff">${totalEmpGlobal}</strong>
+        </div>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;min-width:${100+PT_TYPES.length*90+90}px">
+        <thead>
+          <tr style="background:var(--surface2)">
+            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text2);border-bottom:2px solid var(--border);min-width:80px;position:sticky;left:0;background:var(--surface2)">
+              &nbsp;
+            </th>
+            ${PT_TYPES.map(t=>`
+            <th style="padding:9px 10px;text-align:center;font-size:11px;font-weight:700;background:${t.col}18;color:${t.col};border-bottom:2px solid ${t.col}55;white-space:nowrap;min-width:90px">
+              <div style="font-weight:800">${FR?'Total':'Total'} ${t.k}</div>
+              <div style="font-size:9px;font-weight:500;opacity:.85">${t.l}</div>
+              ${t.abs?`<div style="font-size:8px;background:rgba(239,68,68,.15);color:#dc2626;border-radius:5px;padding:1px 4px;margin-top:2px">≡ abs.</div>`:''}
+            </th>`).join('')}
+            <th style="padding:9px 10px;text-align:center;font-size:11px;font-weight:700;color:#fff;background:var(--primary);border-bottom:2px solid var(--primary);white-space:nowrap;min-width:90px">
+              <div>${FR?'TOTAL':'TOTAL'}</div>
+              <div style="font-size:9px;font-weight:500;opacity:.85">${FR?'Tous types':'All types'}</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Ligne Total -->
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:12px 14px;font-weight:800;font-size:13px;color:var(--text);background:var(--surface2);position:sticky;left:0">
+              ${FR?'Total':'Total'}
+            </td>
+            ${PT_TYPES.map(t=>{
+              const v=recapTotals[t.k];
+              return`<td style="padding:12px 10px;text-align:center">
+                <div style="font-weight:800;font-size:22px;color:${v>0?t.col:'var(--text3)'}">${v>0?v:'—'}</div>
+              </td>`;
+            }).join('')}
+            <td style="padding:12px 10px;text-align:center;background:var(--primary)0a">
+              <div style="font-weight:800;font-size:22px;color:var(--primary)">${recapGrand||'—'}</div>
+            </td>
+          </tr>
+          <!-- Ligne Taux -->
+          <tr style="background:var(--surface2)">
+            <td style="padding:12px 14px;font-weight:800;font-size:13px;color:var(--text);background:var(--surface2);position:sticky;left:0">
+              ${FR?'Taux':'Rate'}
+            </td>
+            ${PT_TYPES.map(t=>{
+              const v=recapTotals[t.k];
+              const tx=totalEmpGlobal>0&&v>0?Math.round(v/totalEmpGlobal*100):0;
+              return`<td style="padding:12px 10px;text-align:center">
+                <div style="font-weight:800;font-size:20px;color:${v>0?t.col:'var(--text3)'}">${v>0?tx+'%':'—'}</div>
+              </td>`;
+            }).join('')}
+            <td style="padding:12px 10px;text-align:center;background:var(--primary)0a">
+              <div style="font-weight:800;font-size:20px;color:var(--primary)">${recapGrand>0?Math.round(recapGrand/totalEmpGlobal*100)+'%':'—'}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  return html;
+}
+
+/* Export Synthèse PDF */
+function expSynthPDF(){
+  const blocs=document.querySelectorAll('.syn2-bloc');
+  if(!blocs.length){toast(lang==='fr'?'Ouvrez d\'abord l\'onglet Synthèse':'Open the Summary tab first','error');return;}
+  const FR=lang==='fr';
+  const mode=document.getElementById('syn2_mode')?.value||'day';
+  const date=document.getElementById('syn2_date')?.value||'';
+  const month=parseInt(document.getElementById('syn2_month')?.value||new Date().getMonth()+1);
+  const year=parseInt(document.getElementById('syn2_year')?.value||new Date().getFullYear());
+  const shift=document.getElementById('syn2_shift')?.value||'';
+  let periodLabel=mode==='day'?date:mode==='month'?`${T('months')[month-1]} ${year}`:`${year}`;
+  const title=`${FR?'Synthèse des Pointages':'Attendance Summary'} — ${periodLabel}${shift?' | Shift: '+shift:''}`;
+  let tablesHtml='';
+  blocs.forEach(bloc=>{
+    const dept=bloc.dataset.dept==='__global__'?(FR?'Récapitulatif Global':'Global Summary'):bloc.dataset.dept;
+    const tbl=bloc.querySelector('table');
+    if(tbl) tablesHtml+=`<div class="sec">${dept}</div>${tbl.outerHTML}`;
+  });
+  openPDF(title,tablesHtml,true);
+}
+
+/* Export Synthèse Excel */
+function expSynthExcel(){
+  if(typeof XLSX==='undefined'){toast('XLSX non disponible','error');return;}
+  const FR=lang==='fr';
+  const mode=document.getElementById('syn2_mode')?.value||'day';
+  const date=document.getElementById('syn2_date')?.value||new Date().toISOString().split('T')[0];
+  const month=parseInt(document.getElementById('syn2_month')?.value||new Date().getMonth()+1);
+  const year=parseInt(document.getElementById('syn2_year')?.value||new Date().getFullYear());
+  const shift=document.getElementById('syn2_shift')?.value||'';
+  const eq=document.getElementById('syn2_eq')?.value||'';
+  const svc=document.getElementById('syn2_svc')?.value||'';
+  const result=buildSyn2Keys(mode,date,month,year,shift,eq,svc);
+  const svcs=svc?[svc]:SERVICES.filter(s=>actifs().some(e=>e.svc===s));
+  const wb=XLSX.utils.book_new();
+  function makeSheet(empsList){
+    const fcts=[...new Set(empsList.map(r=>r.fct))].sort();
+    const nbEmps=empsList.length;
+    const header=[FR?'Fonction':'Position',FR?'Effectif':'Staff',...PT_TYPES.map(t=>`${t.k} (${t.l})`),FR?'Taux%':'Rate%','Total'];
+    const rows=[header];
+    fcts.forEach(fct=>{
+      const empsF=empsList.filter(r=>r.fct===fct);
+      const eff=empsF.length;
+      const row=[fct,eff];
+      let rowTotal=0;
+      PT_TYPES.forEach(t=>{const v=empsF.reduce((s,r)=>s+(r[t.k]||0),0);row.push(v);rowTotal+=v;});
+      row.push(eff>0?Math.round(rowTotal/eff*100)+'%':'—');
+      row.push(rowTotal);
+      rows.push(row);
+    });
+    const colTotals=PT_TYPES.map(t=>empsList.reduce((s,r)=>s+(r[t.k]||0),0));
+    const grandTotal=colTotals.reduce((s,v)=>s+v,0);
+    rows.push([FR?'CUMUL TOTAL':'GRAND TOTAL',nbEmps,...colTotals,nbEmps>0?Math.round(grandTotal/nbEmps*100)+'%':'—',grandTotal]);
+    return XLSX.utils.aoa_to_sheet(rows);
+  }
+  XLSX.utils.book_append_sheet(wb,makeSheet(Object.values(result)),FR?'Global':'Global');
+  svcs.forEach(dept=>{
+    const empsDept=Object.values(result).filter(r=>r.svc===dept);
+    if(!empsDept.length) return;
+    XLSX.utils.book_append_sheet(wb,makeSheet(empsDept),dept.substring(0,30));
+  });
+  let periodLabel=mode==='day'?date:mode==='month'?`${T('months')[month-1]}_${year}`:`${year}`;
+  XLSX.writeFile(wb,`Synthese_${periodLabel}${shift?'_'+shift:''}.xlsx`);
+  toast(T('msg_export'),'success');
+}
+
+function openPDF(title,bodyHtml,landscape=false){
+  const w=window.open('','_blank');
+  if(!w){toast(lang==='fr'?'Autorisez les popups dans votre navigateur':'Allow popups in your browser','error');return;}
+  const css=`<style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;color:#111;padding:16px;font-size:10px}
+    h1{font-size:14px;color:#1a56e8;margin-bottom:2px;font-weight:700}
+    .sub{font-size:9px;color:#666;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;margin-bottom:14px;page-break-inside:avoid}
+    thead th{background:#e8eeff;padding:5px 7px;border:1px solid #bbb;font-size:8px;font-weight:700;text-transform:uppercase;color:#1a56e8;text-align:center;white-space:nowrap}
+    thead th:first-child{text-align:left}
+    tbody td{padding:4px 7px;border:1px solid #ddd;text-align:center;font-size:9px}
+    tbody td:first-child{text-align:left;font-weight:600}
+    tbody tr:nth-child(even){background:#f8faff}
+    tfoot td{background:#e8eeff;font-weight:700;border:1px solid #bbb;text-align:center;padding:5px 7px;font-size:9px;color:#1a56e8}
+    .sec{font-size:11px;font-weight:700;color:#1a56e8;border-bottom:2px solid #1a56e8;padding-bottom:3px;margin:12px 0 6px}
+    @page{margin:10mm;size:A4 ${landscape?'landscape':'portrait'}}
+  </style>`;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>${css}</head><body>
+    <h1>${title}</h1>
+    <div class="sub">PointageRH | ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+    ${bodyHtml}
+  </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),600);
+}
+
+function expAbsPDF(tab){
+  const tbl=document.getElementById(tab==='det'?'abs-det-tbl':'abs-rec-tbl');
+  if(!tbl){toast(lang==='fr'?'Ouvrez d\'abord cet onglet':'Open the tab first','error');return;}
+  openPDF(`${lang==='fr'?'Absences':'Absence Tracking'} — ${T('months')[gM()-1]} ${gY()}`,tbl.outerHTML,true);
+}
+
+function expAbsExcel(tab){
+  if(typeof XLSX==='undefined'){toast('XLSX non disponible','error');return;}
+  const tbl=document.getElementById(tab==='det'?'abs-det-tbl':'abs-rec-tbl');
+  if(!tbl){toast(lang==='fr'?'Ouvrez d\'abord cet onglet':'Open the tab first','error');return;}
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.table_to_sheet(tbl);
+  const sn=tab==='det'?(lang==='fr'?'Détail':'Detail'):(lang==='fr'?'Récap':'Recap');
+  XLSX.utils.book_append_sheet(wb,ws,sn);
+  XLSX.writeFile(wb,`Absences_${sn}_${T('months')[gM()-1]}_${gY()}.xlsx`);
+  toast(T('msg_export'),'success');
+}
+
+function exportView(){
+  const FR=lang==='fr';
+  document.getElementById('mTit').textContent=FR?'Exporter':'Export';
+  document.getElementById('modal').className='modal';
+  const items=[
+    {lbl:FR?'Tableau de bord':'Dashboard', pdf:'expDashPDF()',  xls:'expDashExcel()'},
+    {lbl:FR?'Liste Employés':'Employees',  pdf:'expEmpsPDF()',  xls:'expEmps()'},
+    {lbl:FR?'Pointage':'Attendance',       pdf:'expPTPDF()',    xls:'expPT()'},
+    {lbl:FR?'Absences Détail':'Abs. Detail', pdf:"expAbsPDF('det')", xls:"expAbsExcel('det')"},
+    {lbl:FR?'Absences Récap':'Abs. Recap',   pdf:"expAbsPDF('rec')", xls:"expAbsExcel('rec')"},
+  ];
+  document.getElementById('mBod').innerHTML=`
+    <p class="sm cm mb3">${FR?'Choisissez ce que vous souhaitez exporter :':'Choose what to export:'}</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${items.map(r=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);flex-wrap:wrap;gap:8px">
+        <span style="font-weight:600;font-size:13px">${r.lbl}</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn bd bsm" onclick="${r.pdf};closeM()"><i class="fa fa-file-pdf"></i> PDF</button>
+          <button class="btn bs bsm" onclick="${r.xls};closeM()"><i class="fa fa-file-excel"></i> Excel</button>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  document.getElementById('mFtr').innerHTML=`<button class="btn bg2" onclick="closeM()">${T('cancel')}</button>`;
+  openM();
+}
+
+function expDashPDF(){
+  const FR=lang==='fr';const m=gM(),y=gY(),lbl=`${T('months')[m-1]} ${y}`;
+  const ac=actifs(),ina=employees.filter(e=>e.st==='Inactif');
+  const H=ac.filter(e=>e.sx==='M').length,F=ac.filter(e=>e.sx==='F').length;
+  let ouv=0;for(let d=1;d<=dim(m,y);d++){const dw=dow(d,m,y);if(dw>0&&dw<7&&!isFer(d,m,y))ouv++;}
+  let totP=0,totA=0;ac.forEach(e=>{const c=mPTfull(e,m,y);totP+=c._pres;totA+=c._abs;});
+  const tot=ac.length*ouv||1;
+  const svcC={};SERVICES.forEach(s=>svcC[s]=0);ac.forEach(e=>{if(svcC[e.svc]!==undefined)svcC[e.svc]++;});
+  const fctC={};ac.forEach(e=>{if(!fctC[e.fct])fctC[e.fct]=0;fctC[e.fct]++;});
+  const body=`
+  <table><thead><tr><th>${FR?'Indicateur':'Indicator'}</th><th>${FR?'Valeur':'Value'}</th></tr></thead>
+  <tbody>
+    <tr><td>${FR?'Total Employés':'Total Employees'}</td><td>${employees.length}</td></tr>
+    <tr><td>${FR?'Actifs':'Active'}</td><td>${ac.length}</td></tr>
+    <tr><td>${FR?'Inactifs':'Inactive'}</td><td>${ina.length}</td></tr>
+    <tr><td>${FR?'Hommes':'Males'}</td><td>${H} (${ac.length?Math.round(H/ac.length*100):0}%)</td></tr>
+    <tr><td>${FR?'Femmes':'Females'}</td><td>${F} (${ac.length?Math.round(F/ac.length*100):0}%)</td></tr>
+    <tr><td>${FR?'Taux Présence':'Attendance'} ${lbl}</td><td>${Math.round(totP/tot*100)}%</td></tr>
+    <tr><td>${FR?'Taux Absentéisme':'Absenteeism'} ${lbl}</td><td>${Math.round(totA/tot*100)}%</td></tr>
+  </tbody></table>
+  <div class="sec">${FR?'Effectif par Département':'By Dept'}</div>
+  <table><thead><tr><th>${FR?'Département':'Dept'}</th><th>${FR?'Effectif':'Staff'}</th><th>%</th></tr></thead>
+  <tbody>${Object.entries(svcC).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([s,v])=>`<tr><td>${s}</td><td>${v}</td><td>${ac.length?Math.round(v/ac.length*100):0}%</td></tr>`).join('')}</tbody>
+  <tfoot><tr><td>TOTAL</td><td>${ac.length}</td><td>100%</td></tr></tfoot></table>
+  <div class="sec">${FR?'Effectif par Fonction':'By Position'}</div>
+  <table><thead><tr><th>${FR?'Fonction':'Position'}</th><th>${FR?'Effectif':'Staff'}</th><th>%</th></tr></thead>
+  <tbody>${Object.entries(fctC).sort((a,b)=>b[1]-a[1]).map(([f,v])=>`<tr><td>${f}</td><td>${v}</td><td>${ac.length?Math.round(v/ac.length*100):0}%</td></tr>`).join('')}</tbody>
+  <tfoot><tr><td>TOTAL</td><td>${ac.length}</td><td>100%</td></tr></tfoot></table>`;
+  openPDF(`${FR?'Tableau de bord':'Dashboard'} — ${lbl}`,body);
+}
+
+function expDashExcel(){
+  const FR=lang==='fr';const m=gM(),y=gY();
+  const ac=actifs();const H=ac.filter(e=>e.sx==='M').length,F=ac.filter(e=>e.sx==='F').length;
+  let ouv=0;for(let d=1;d<=dim(m,y);d++){const dw=dow(d,m,y);if(dw>0&&dw<7&&!isFer(d,m,y))ouv++;}
+  let totP=0,totA=0;ac.forEach(e=>{const c=mPTfull(e,m,y);totP+=c._pres;totA+=c._abs;});
+  const tot=ac.length*ouv||1;
+  const wb=XLSX.utils.book_new();
+  const kpi=[[FR?'Indicateur':'Indicator',FR?'Valeur':'Value'],
+    [FR?'Total':'Total',employees.length],[FR?'Actifs':'Active',ac.length],
+    [FR?'Inactifs':'Inactive',employees.length-ac.length],
+    ['Hommes',H],['Femmes',F],
+    [FR?'Taux Présence':'Attendance%',Math.round(totP/tot*100)+'%'],
+    [FR?'Taux Absentéisme':'Absenteeism%',Math.round(totA/tot*100)+'%']];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(kpi),'KPI');
+  const svcC={};ac.forEach(e=>{if(!svcC[e.svc])svcC[e.svc]=0;svcC[e.svc]++;});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([[FR?'Département':'Dept',FR?'Effectif':'Staff','%'],...Object.entries(svcC).sort((a,b)=>b[1]-a[1]).map(([s,v])=>[s,v,ac.length?Math.round(v/ac.length*100)+'%':'0%'])]),FR?'Dept':'Dept');
+  XLSX.writeFile(wb,`Dashboard_${T('months')[m-1]}_${y}.xlsx`);toast(T('msg_export'),'success');
+}
+
+function expEmpsPDF(){
+  const m=gM(),y=gY();
+  const list=employees.filter(e=>cfg.showInact||e.st==='Actif');
+  const ptH=PT_TYPES.map(t=>`<th>${t.k}</th>`).join('');
+  const rows=list.map((e,i)=>{
+    const ct=mPTfull(e,m,y);
+    return`<tr><td>${i+1}</td><td>${e.nom} ${e.pre}</td><td>${e.mat}</td><td>${e.svc}</td><td>${e.fct}</td><td>${e.cnt}</td><td>${e.st==='Actif'?'✓':'✗'}</td><td>${e.de}</td><td>${anc(e.de,e.da)}</td>${PT_TYPES.map(t=>`<td>${ct[t.k]||0}</td>`).join('')}<td>${ct._abs}</td></tr>`;
+  }).join('');
+  openPDF(`${T('employes')} — ${T('months')[m-1]} ${y}`,`<table>
+    <thead><tr><th>#</th><th>${T('col_name')}</th><th>${T('col_mat')}</th><th>${T('col_svc')}</th><th>${T('col_fct')}</th><th>${T('col_cnt')}</th><th>St</th><th>${T('col_hire')}</th><th>${T('col_anc')}</th>${ptH}<th>Abs</th></tr></thead>
+    <tbody>${rows}</tbody></table>`,true);
+}
+
+function expPTPDF(){
+  const m=gM(),y=gY(),days=dim(m,y);
+  const list=actifs();const dArr=Array.from({length:days},(_,i)=>i+1);
+  const dayH=dArr.map(d=>`<th>${d}<br><span style="font-size:7px">${T('days')[dow(d,m,y)]}</span></th>`).join('');
+  const rows=list.map((e,ri)=>{
+    const ct=mPTfull(e,m,y);
+    const cells=dArr.map(d=>{const v=ptd[`${e.mat}-${y}-${m}-${d}`]||'';const tp=getPT(v);return`<td style="${tp?'color:'+tp.col+';font-weight:700':'color:#aaa'}">${v||'·'}</td>`;}).join('');
+    return`<tr><td>${ri+1}</td><td>${e.nom} ${e.pre}</td><td>${e.mat}</td><td>${e.svc}</td>${cells}<td>${ct._pres}</td><td>${ct._abs}</td></tr>`;
+  }).join('');
+  openPDF(`${T('pointage')} — ${T('months')[m-1]} ${y}`,`<table>
+    <thead><tr><th>#</th><th>${T('col_name')}</th><th>${T('col_mat')}</th><th>${T('col_svc')}</th>${dayH}<th>P</th><th>A</th></tr></thead>
+    <tbody>${rows}</tbody></table>`,true);
+}
+
+function expEmps(){
+  const m=gM(),y=gY();
+  const data=employees.map((e,i)=>{
+    const ct=mPTfull(e,m,y);
+    const row={[T('col_rank')]:i+1,[T('col_name')]:e.nom+' '+e.pre,[T('col_mat')]:e.mat,[T('col_svc')]:e.svc,[T('col_eq')]:e.eq,[T('col_fct')]:e.fct,[T('col_cnt')]:e.cnt,[T('col_st')]:e.st,[T('col_hire')]:e.de,[T('col_anc')]:anc(e.de,e.da)};
+    PT_TYPES.forEach(t=>{row[`${t.k} (${t.l})`]=ct[t.k]||0;});
+    row[T('col_absT')]=ct._abs;return row;
+  });
+  const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,T('employes'));
+  XLSX.writeFile(wb,`${T('employes')}_${T('months')[m-1]}_${y}.xlsx`);toast(T('msg_export'),'success');
+}
+
+function expPT(){
+  const m=gM(),y=gY(),days=dim(m,y);
+  const rows=actifs().map(e=>{
+    const row={[T('col_mat')]:e.mat,[T('col_name')]:e.nom+' '+e.pre,[T('col_svc')]:e.svc,[T('col_eq')]:e.eq,[T('col_fct')]:e.fct};
+    for(let d=1;d<=days;d++) row[`J${d}`]=ptd[`${e.mat}-${y}-${m}-${d}`]||'';
+    const ct=mPTfull(e,m,y);PT_TYPES.forEach(t=>{row[t.k]=ct[t.k]||0;});
+    row[T('col_absT')]=ct._abs;return row;
+  });
+  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,T('pointage'));
+  XLSX.writeFile(wb,`${T('pointage')}_${T('months')[m-1]}_${y}.xlsx`);toast(T('msg_export'),'success');
+}
+
+function tFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen()}
+
+/* ═══════════════════════════════════
+   PARAMÈTRES
+═══════════════════════════════════ */
+function rParam(){
+  if(!cfg.paramUnlocked){
+    return`<div class="pwd-screen"><div class="pwd-box">
+      <div class="pwd-icon"><i class="fa fa-lock"></i></div>
+      <h2 style="font-family:var(--fh);font-weight:700;margin-bottom:8px">${T('paramTitle')}</h2>
+      <p class="sm cm mb3">${T('paramDesc')}</p>
+      <input type="password" class="fc" id="paramPwd" placeholder="${T('paramPlaceholder')}" style="text-align:center;letter-spacing:4px;font-size:18px;margin-bottom:12px" onkeydown="if(event.key==='Enter')unlockParam()">
+      <div id="paramErr" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none"><i class="fa fa-circle-xmark"></i> ${T('wrongPwd')}</div>
+      <button class="btn bp wf" onclick="unlockParam()"><i class="fa fa-unlock"></i> ${T('paramBtn')}</button>
+    </div></div>`;
+  }
+
+  const themes=[
+    {id:'ocean',  n:'Ocean',  sb:'#0f172a',mn:'#f0f4ff',ac:'#1a56e8'},
+    {id:'violet', n:'Violet', sb:'#1e1033',mn:'#f5f3ff',ac:'#7c3aed'},
+    {id:'foret',  n:'Forêt',  sb:'#052e16',mn:'#f0fdf4',ac:'#059669'},
+    {id:'rouge',  n:'Rubis',  sb:'#1c0a0a',mn:'#fff5f5',ac:'#dc2626'},
+    {id:'ardoise',n:'Ardoise',sb:'#1e293b',mn:'#f1f5f9',ac:'#475569'},
+    {id:'nuit',   n:'Nuit',   sb:'#020617',mn:'#0f172a',ac:'#38bdf8'},
+  ];
+
+  function pList(id,arr,addFn,rmFn,ph){
+    return`<div class="pl">${arr.map((v,i)=>`<div class="pi"><span class="pn">${v}</span><button class="btn bsm bd bic" onclick="${rmFn}(${i})"><i class="fa fa-xmark"></i></button></div>`).join('')}</div>
+    <div class="padd"><input type="text" class="fc" id="inp-${id}" placeholder="${ph}" style="flex:1"><button class="btn bp bsm" onclick="${addFn}()"><i class="fa fa-plus"></i> ${T('btn_addItem')}</button></div>`;
+  }
+
+  const ptSec=`<div class="card" style="grid-column:1/-1">
+    <div class="ch"><div class="ct"><i class="fa fa-tag cp"></i> ${T('sec_ptypes')}</div><button class="btn bp bsm" onclick="openNewPT()"><i class="fa fa-plus"></i> ${T('btn_newType')}</button></div>
+    <div class="cb"><p class="xs cm mb3">${T('absNote')}</p>
+    ${PT_TYPES.map((t,i)=>`<div class="ptpc">
+      <input type="color" class="ptcd" value="${t.col}" onchange="PT_TYPES[${i}].col=this.value;rerender()" title="${T('lbl_color')}">
+      <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-weight:800;font-size:14px;color:${t.col};font-family:var(--fh)">${t.k}</span>
+        <input type="text" value="${t.l}" style="border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;background:var(--surface);color:var(--text);outline:none;width:140px" onchange="PT_TYPES[${i}].l=this.value;rerender()">
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap">
+          <input type="checkbox"${t.abs?' checked':''} onchange="PT_TYPES[${i}].abs=this.checked;rerender()">
+          <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${t.abs?'rgba(239,68,68,.15)':'rgba(100,116,139,.1)'};color:${t.abs?'#dc2626':'#64748b'}">${t.abs?T('lbl_isAbsTag'):T('lbl_notAbs')}</span>
+        </label>
+      </div></div>
+      ${PT_TYPES.length>2?`<button class="btn bsm bd bic" onclick="rmPT(${i})"><i class="fa fa-trash"></i></button>`:''}
+    </div>`).join('')}
+    </div></div>`;
+
+  return`
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button class="btn bd bsm" onclick="cfg.paramUnlocked=false;render('parametres')"><i class="fa fa-lock"></i> ${T('lockParam')}</button>
+  </div>
+  <div class="sgrid2">
+    <!-- Thèmes -->
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-palette cp"></i> ${T('sec_themes')}</div></div>
+      <div class="cb"><div class="thgrid">${themes.map(t=>`<div class="thcard${cfg.theme===t.id?' active':''}" onclick="applyTh('${t.id}')">
+        <div class="thp"><div class="thps" style="background:${t.sb}"></div><div class="thpm" style="background:${t.mn}"><div style="height:14px;background:#fff;border-bottom:1px solid #e2e8f6;display:flex;align-items:center;padding:0 5px"><div style="width:28px;height:3px;border-radius:2px;background:${t.ac}"></div></div></div></div>
+        <div class="thn">${t.n} ${cfg.theme===t.id?'✓':''}</div>
+      </div>`).join('')}</div></div>
+    </div>
+
+    <!-- Services -->
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-building cp"></i> ${T('sec_svc')}</div></div>
+      <div class="cb">${pList('svc',SERVICES,'addSvc','rmSvc',T('ph_svc'))}</div>
+    </div>
+
+    <!-- Fonctions -->
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-briefcase cp"></i> ${T('sec_fct')}</div></div>
+      <div class="cb">${pList('fct',FONCTIONS,'addFct','rmFct',T('ph_fct'))}</div>
+    </div>
+
+    <!-- Sous-Fonctions -->
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-tag cp"></i> ${T('sec_sfct')}</div></div>
+      <div class="cb">${pList('sfct',SOUS_FCT,'addSFct','rmSFct',T('ph_sfct'))}</div>
+    </div>
+
+    <!-- Jours Fériés -->
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-calendar-days cp"></i> ${T('sec_hol')}</div></div>
+      <div class="cb">
+        <div class="pl">${feries.map(h=>`<div class="pi"><span class="pn"><i class="fa fa-star" style="color:var(--warning);font-size:11px"></i> ${h}</span><button class="btn bsm bd bic" onclick="rmFer('${h}')"><i class="fa fa-xmark"></i></button></div>`).join('')}</div>
+        <div class="padd"><input type="date" class="fc" id="inp-fer" style="flex:1"><button class="btn bp bsm" onclick="addFer()"><i class="fa fa-plus"></i></button></div>
+      </div>
+    </div>
+
+    <!-- Shifts -->
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-clock cp"></i> ${T('sec_shifts')}</div></div>
+      <div class="cb">
+        ${cfg.shifts.map((s,i)=>`<div class="pi mb3"><div><span class="tag tbl2" style="margin-right:6px">${s.n}</span><span class="xs cm">${s.s} → ${s.e}</span></div><div class="flex g2"><button class="btn bsm bg2 bic" onclick="editSh(${i})"><i class="fa fa-pencil"></i></button><button class="btn bsm bd bic" onclick="cfg.shifts.splice(${i},1);render('parametres')"><i class="fa fa-trash"></i></button></div></div>`).join('')}
+        <button class="btn bo bsm mt3" onclick="addSh()"><i class="fa fa-plus"></i> ${T('btn_addShift')}</button>
+      </div>
+    </div>
+
+    <!-- Changer mot de passe -->
+    <div class="card"><div class="ch"><div class="ct"><i class="fa fa-lock cp"></i> ${T('sec_pwd')}</div></div>
+      <div class="cb">
+        <div class="fg"><label class="fl">${T('lbl_curPwd')}</label><input type="password" class="fc" id="pc" placeholder="••••"></div>
+        <div class="fg"><label class="fl">${T('lbl_newPwd')}</label><input type="password" class="fc" id="pn" placeholder="••••"></div>
+        <div class="fg"><label class="fl">${T('lbl_confPwd')}</label><input type="password" class="fc" id="pk" placeholder="••••"></div>
+        <button class="btn bp" onclick="chPwd()"><i class="fa fa-key"></i> ${T('btn_chgPwd')}</button>
+      </div>
+    </div>
+
+    <!-- Types de Pointage -->
+    ${ptSec}
+  </div>`;
+}
+
+function unlockParam(){
+  const pwd=document.getElementById('paramPwd')?.value;
+  if(pwd!==cfg.pwd){
+    const e=document.getElementById('paramErr');
+    if(e){e.style.display='block';setTimeout(()=>e.style.display='none',2500);}
+    return;
+  }
+  cfg.paramUnlocked=true;
+  render('parametres');
+  toast(T('msg_paramOk'),'success');
+}
+
+function openNewPT(){
+  document.getElementById('mTit').textContent=T('newPTTitle');
+  document.getElementById('modal').className='modal';
+  document.getElementById('mBod').innerHTML=`
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_abbr')}</label><input class="fc" id="ptk" placeholder="HS" maxlength="4" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="fg"><label class="fl">${T('lbl_lbl')}</label><input class="fc" id="ptl" placeholder="Heures Sup."></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_color')}</label><input type="color" class="fc" id="ptc" value="#6366f1" style="height:42px;cursor:pointer"></div>
+      <div class="fg" style="display:flex;align-items:center;padding-top:20px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="ptabs"> ${T('lbl_isAbs')}</label></div>
+    </div>`;
+  document.getElementById('mFtr').innerHTML=`<button class="btn bg2" onclick="closeM()">${T('cancel')}</button><button class="btn bp" onclick="savePT()"><i class="fa fa-plus"></i> ${T('btn_create')}</button>`;
+  openM();
+}
+function savePT(){
+  const k=document.getElementById('ptk')?.value?.trim().toUpperCase();
+  const l=document.getElementById('ptl')?.value?.trim();
+  const col=document.getElementById('ptc')?.value||'#6366f1';
+  const abs=document.getElementById('ptabs')?.checked||false;
+  if(!k||!l){toast(T('msg_abbrvReq'),'error');return;}
+  if(PT_TYPES.find(t=>t.k===k)){toast(`"${k}" ${T('msg_abbrvExists')}`,'error');return;}
+  PT_TYPES.push({k,l,col,abs});
+  closeM();render('parametres');
+  toast(`"${k}" ${T('msg_typeCreated')}`,'success');
+}
+function rmPT(i){if(!confirm(`${T('msg_ptDel')} "${PT_TYPES[i].k}" ?`))return;PT_TYPES.splice(i,1);render('parametres');}
+function addSvc(){const v=document.getElementById('inp-svc')?.value?.trim();if(!v)return;if(!SERVICES.includes(v))SERVICES.push(v);render('parametres');toast(T('msg_svcAdded'),'success');}
+function rmSvc(i){if(!confirm(`Supprimer "${SERVICES[i]}" ?`))return;SERVICES.splice(i,1);render('parametres');}
+function addFct(){const v=document.getElementById('inp-fct')?.value?.trim();if(!v)return;if(!FONCTIONS.includes(v))FONCTIONS.push(v);render('parametres');toast(T('msg_fctAdded'),'success');}
+function rmFct(i){if(!confirm(`Supprimer "${FONCTIONS[i]}" ?`))return;FONCTIONS.splice(i,1);render('parametres');}
+function addSFct(){const v=document.getElementById('inp-sfct')?.value?.trim();if(!v)return;if(!SOUS_FCT.includes(v))SOUS_FCT.push(v);render('parametres');toast(T('msg_sfctAdded'),'success');}
+function rmSFct(i){if(!confirm(`Supprimer "${SOUS_FCT[i]}" ?`))return;SOUS_FCT.splice(i,1);render('parametres');}
+function addFer(){const v=document.getElementById('inp-fer')?.value;if(!v)return;if(!feries.includes(v)){feries.push(v);feries.sort();}render('parametres');toast(T('msg_holAdded'),'success');}
+function rmFer(h){feries=feries.filter(x=>x!==h);render('parametres');}
+function addSh(){
+  document.getElementById('mTit').textContent=T('shiftAdd');
+  document.getElementById('modal').className='modal';
+  document.getElementById('mBod').innerHTML=`
+    <div class="fg"><label class="fl">${T('lbl_shiftName')}</label><input class="fc" id="sn" placeholder="Nuit"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_shiftStart')}</label><input type="time" class="fc" id="ss" value="22:00"></div>
+      <div class="fg"><label class="fl">${T('lbl_shiftEnd')}</label><input type="time" class="fc" id="se" value="06:00"></div>
+    </div>`;
+  document.getElementById('mFtr').innerHTML=`<button class="btn bg2" onclick="closeM()">${T('cancel')}</button><button class="btn bp" onclick="saveSh(null)">${T('btn_addItem')}</button>`;
+  openM();
+}
+function editSh(i){
+  const s=cfg.shifts[i];
+  document.getElementById('mTit').textContent=T('shiftEdit');
+  document.getElementById('modal').className='modal';
+  document.getElementById('mBod').innerHTML=`
+    <div class="fg"><label class="fl">${T('lbl_shiftName')}</label><input class="fc" id="sn" value="${s.n}"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">${T('lbl_shiftStart')}</label><input type="time" class="fc" id="ss" value="${s.s}"></div>
+      <div class="fg"><label class="fl">${T('lbl_shiftEnd')}</label><input type="time" class="fc" id="se" value="${s.e}"></div>
+    </div>`;
+  document.getElementById('mFtr').innerHTML=`<button class="btn bg2" onclick="closeM()">${T('cancel')}</button><button class="btn bp" onclick="saveSh(${i})">${T('save')}</button>`;
+  openM();
+}
+function saveSh(idx){
+  const n=document.getElementById('sn').value.trim();
+  const s=document.getElementById('ss').value;
+  const e=document.getElementById('se').value;
+  if(!n){toast(T('msg_shiftNameReq'),'error');return;}
+  if(idx===null) cfg.shifts.push({n,s,e});
+  else cfg.shifts[idx]={n,s,e};
+  closeM();render('parametres');
+  toast(T('msg_shiftSaved'),'success');
+}
+function applyTh(t){
+  cfg.theme=t;
+  localStorage.setItem('prhTheme',t);
+  document.body.setAttribute('data-theme',t);
+  render('parametres');
+  toast(`${T('theme_lbl')} ${t}`,'success');
+}
+function chPwd(){
+  const c=document.getElementById('pc').value;
+  const n=document.getElementById('pn').value;
+  const k=document.getElementById('pk').value;
+  if(c!==cfg.pwd){toast(T('msg_pwdWrong'),'error');return;}
+  if(n!==k){toast(T('msg_pwdMismatch'),'error');return;}
+  if(n.length<4){toast(T('msg_pwdShort'),'error');return;}
+  cfg.pwd=n;
+  toast(T('msg_pwdOk'),'success');
+}
+
+
+/* ═══════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  const now=new Date();
+  /* Init mois */
+  const gm=document.getElementById('gM');
+  T('mshort').forEach((mn,i)=>{const o=document.createElement('option');o.value=i+1;o.textContent=mn;if(i+1===now.getMonth()+1)o.selected=true;gm.appendChild(o);});
+  document.getElementById('gY').value=now.getFullYear();
+  /* Apply lang */
+  applyLangUI();
+  go('dashboard');
+});
+</script>
+</body>
+</html>
